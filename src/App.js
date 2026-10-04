@@ -65,7 +65,53 @@ const TeamLogo = ({ id, name, color }) => {
       style={{height:"1.5em",width:"1.5em",objectFit:"contain",verticalAlign:"middle"}}
     />
   );
-};
+};// ─── INTRO : une F1 traverse l'écran ──────────────────────────────
+function Intro({onDone}){
+  const [out,setOut]=useState(false);
+  const cb=React.useRef(onDone);
+  cb.current=onDone;
+  useEffect(()=>{
+    const t1=setTimeout(()=>setOut(true),2600);
+    const t2=setTimeout(()=>cb.current(),3200);
+    return()=>{clearTimeout(t1);clearTimeout(t2);};
+  },[]);
+  const skip=()=>{setOut(true);setTimeout(()=>cb.current(),400);};
+  const Wheel=({cx,cy,r})=>(
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill="#111" stroke="#333" strokeWidth="2"/>
+      <g className="wheel-spin">
+        {[0,60,120].map(a=><line key={a} x1={cx-r*.55} y1={cy} x2={cx+r*.55} y2={cy} stroke="#777" strokeWidth="2.5" transform={`rotate(${a} ${cx} ${cy})`}/>)}
+        <circle cx={cx} cy={cy} r={r*.22} fill="#999"/>
+      </g>
+    </g>
+  );
+  return(
+    <div className={`intro${out?" out":""}`} onClick={skip}>
+      <div className="intro-lines">
+        {[28,38,46,54,62,72].map((t,i)=><span key={t} style={{top:`${t}%`,animationDelay:`${1.1+i*0.13}s`}}/>)}
+      </div>
+      <div className="intro-car">
+        <svg viewBox="0 0 400 110" width="100%">
+          <ellipse cx="200" cy="105" rx="175" ry="4" fill="rgba(0,0,0,.5)"/>
+          <rect x="16" y="18" width="5" height="34" rx="2" fill="#f0f0f4"/>
+          <rect x="18" y="22" width="40" height="7" rx="2" fill="#e8002d"/>
+          <rect x="30" y="29" width="4" height="26" fill="#222"/>
+          <path d="M30 78 L52 58 L110 52 L150 40 L195 38 L222 50 L262 54 L340 68 L384 76 L384 82 L30 82 Z" fill="#e8002d"/>
+          <path d="M120 69 L300 72 L300 76 L120 74 Z" fill="#f0f0f4" opacity=".9"/>
+          <path d="M150 40 L162 26 L186 26 L196 38 Z" fill="#b80024"/>
+          <path d="M205 50 L225 50 L226 54 L205 54 Z" fill="#111"/>
+          <circle cx="214" cy="44" r="7" fill="#ffca28"/>
+          <path d="M200 52 Q216 34 238 52" fill="none" stroke="#222" strokeWidth="3" strokeLinecap="round"/>
+          <rect x="350" y="84" width="46" height="5" rx="2" fill="#f0f0f4"/>
+          <rect x="392" y="78" width="4" height="12" fill="#e8002d"/>
+          <Wheel cx={96} cy={80} r={25}/>
+          <Wheel cx={316} cy={82} r={22}/>
+        </svg>
+      </div>
+      <div className="intro-skip">Touche pour passer</div>
+    </div>
+  );
+}
 
 // ─── CSS ──────────────────────────────────────────────────────────
 const CSS=`
@@ -163,7 +209,20 @@ body{font-family:'Rajdhani',sans-serif;color:var(--w);-webkit-font-smoothing:ant
   .rgp{min-width:0;font-size:.64rem}
   .gdate{font-size:.66rem}
   .sk{width:46px}
-}`;
+} .intro{position:fixed;inset:0;z-index:9999;background:#09090b;overflow:hidden;transition:opacity .5s ease,visibility .5s}
+.intro.out{opacity:0;visibility:hidden}
+.intro::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 70% 40%,rgba(232,0,45,.2),transparent 60%)}
+.intro-car{position:absolute;left:0;top:50%;width:340px;opacity:0;animation:drive 2.4s .2s cubic-bezier(.55,0,.85,.45) forwards}
+@keyframes drive{
+  0%{transform:translate(8vw,-50%) scale(.16);opacity:0;filter:blur(0)}
+  10%{opacity:1}
+  100%{transform:translate(125vw,-50%) scale(1.9);opacity:1;filter:blur(2px)}
+}
+.wheel-spin{transform-box:fill-box;transform-origin:center;animation:wspin .22s linear infinite}
+@keyframes wspin{to{transform:rotate(360deg)}}
+.intro-lines span{position:absolute;left:0;height:2px;width:45vw;opacity:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:lines .7s linear infinite}
+@keyframes lines{from{transform:translateX(110vw);opacity:.8}to{transform:translateX(-60vw);opacity:0}}
+.intro-skip{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--g2)}`;
 
 // ─── ICONS ────────────────────────────────────────────────────────
 const ICP={
@@ -548,6 +607,17 @@ export default function App(){
   const [fav,setFav]=useState(null);
   const [,setTick]=useState(0);
   const [status,setStatus]=useState("loading");
+  const [intro,setIntro]=useState(()=>{
+  try{
+    if(sessionStorage.getItem("f1intro"))return false;
+    if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return false;
+  }catch(e){}
+  return true;
+});
+const finishIntro=()=>{
+  try{sessionStorage.setItem("f1intro","1");}catch(e){}
+  setIntro(false);
+};
 
   useEffect(()=>{
     let stop=false;
@@ -578,6 +648,7 @@ export default function App(){
 
   return(<>
     <style>{CSS}</style>
+    {intro&&<Intro onDone={finishIntro}/>}
     <div className="app">
       <header className="hdr">
         <div className="logo"><div className="dot"/><span className="logo-r">F1</span><span>TRACKER</span></div>
