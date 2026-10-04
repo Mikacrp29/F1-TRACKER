@@ -32,6 +32,23 @@ function useCd(t){
   return{d:Math.floor(r/86400000),h:Math.floor(r%86400000/3600000),m:Math.floor(r%3600000/60000),s:Math.floor(r%60000/1000)};
 }
 
+// ─── DRAPEAUX (images : Windows n'affiche pas les emojis de drapeaux) ──
+const Flag = ({ f }) => {
+  const cps = [...(f || "")].map(c => c.codePointAt(0));
+  const ok = cps.length === 2 && cps.every(c => c >= 0x1F1E6 && c <= 0x1F1FF);
+  if (!ok) return <span>{f}</span>;
+  const code = cps.map(c => String.fromCharCode(c - 0x1F1E6 + 97)).join("");
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${code}.png`}
+      srcSet={`https://flagcdn.com/w80/${code}.png 2x`}
+      alt={code.toUpperCase()}
+      loading="lazy"
+      style={{ height: "1em", width: "1.4em", objectFit: "cover", borderRadius: 2, verticalAlign: "-0.12em" }}
+    />
+  );
+};
+
 // ─── CSS ──────────────────────────────────────────────────────────
 const CSS=`
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap');
@@ -172,7 +189,7 @@ function Home({fav,setFav}){
             {gp.hasSprint&&<span className="chip chip-sp">🏃 Sprint</span>}
           </div>
         </div>
-        <span style={{fontSize:"2rem",marginLeft:7}}>{gp.flag}</span>
+        <span style={{fontSize:"2rem",marginLeft:7}}><Flag f={gp.flag}/></span>
       </div>
       {ns&&<div style={{marginTop:12}}><Cd target={ns.t} label={`${S_LBL[ns.k]||ns.k} — ${fmtD(ns.t)} ${fmtT(ns.t)}`}/></div>}
     </div>
@@ -202,7 +219,7 @@ function Home({fav,setFav}){
           return(<div key={d.short} className="strow" style={{cursor:"pointer",background:isFav?"rgba(232,0,45,.07)":""}} onClick={()=>setFav(isFav?null:d.short)}>
             <span className="favstar" style={{color:isFav?"var(--y)":"var(--g2)"}}>{isFav?"★":"☆"}</span>
             <div className="tb" style={{background:d.color}}/>
-            <div className="di" style={{flex:1}}><div className="dn">{d.flag} {d.name}</div><div className="dt">{d.team}</div></div>
+            <div className="di" style={{flex:1}}><div className="dn"><Flag f={d.flag}/> {d.name}</div><div className="dt">{d.team}</div></div>
             <div><div className="dp">{d.pts}</div><span className="dl">PTS</span></div>
           </div>);
         })}
@@ -225,7 +242,7 @@ function Calendar({onGP}){
       return(<div key={gp.round} className={`gpc ${st}`} onClick={()=>onGP(gp)}>
         <div className="gpci">
           <span className="rnum">R{gp.round}</span>
-          <span style={{fontSize:"1.2rem"}}>{gp.flag}</span>
+          <span style={{fontSize:"1.2rem"}}><Flag f={gp.flag}/></span>
           <div className="gi">
             <div className="gn">{gp.name}</div>
             <div className="gc">{gp.circuit} · {gp.city}</div>
@@ -262,7 +279,7 @@ function Standings(){
           <span className={`pn${d.pos<=3?" t3":""}`}>{d.pos}</span>
           <div className="tb" style={{background:d.color}}/>
           <div className="di" style={{flex:1}}>
-            <div className="dn">{d.flag} {d.name}</div>
+            <div className="dn"><Flag f={d.flag}/> {d.name}</div>
             <div className="dt">{d.team} · {d.wins} victoire{d.wins!==1?"s":""}</div>
             <div className="pbar"><div className="pfill" style={{width:`${(d.pts/maxD)*100}%`,background:d.color}}/></div>
           </div>
@@ -275,7 +292,7 @@ function Standings(){
           <span className={`pn${c.pos<=3?" t3":""}`}>{c.pos}</span>
           <div className="tb" style={{background:c.color}}/>
           <div className="di" style={{flex:1}}>
-            <div className="dn">{c.flag} {c.name}</div>
+            <div className="dn"><Flag f={c.flag}/> {c.name}</div>
             <div className="dt">{c.wins} victoire{c.wins!==1?"s":""}</div>
             <div className="pbar"><div className="pfill" style={{width:`${(c.pts/maxC)*100}%`,background:c.color}}/></div>
           </div>
@@ -316,7 +333,7 @@ function Results(){
                 <div style={{fontFamily:"Orbitron",fontSize:".52rem",color:"var(--red)",fontWeight:700,letterSpacing:".13em"}}>R{r.round}</div>
                 {isSprint?<span className="bspr">SPRINT</span>:<span className="b26">COURSE</span>}
               </div>
-              <div style={{fontWeight:700,fontSize:".92rem"}}>{r.flag} {r.name}</div>
+              <div style={{fontWeight:700,fontSize:".92rem"}}><Flag f={r.flag}/> {r.name}</div>
               <div style={{fontSize:".7rem",color:"var(--g)"}}>{r.date}</div>
             </div>
             <div style={{textAlign:"right"}}>
@@ -329,7 +346,7 @@ function Results(){
           {r.top.map(p=>(<div key={p.pos} className="rrow">
             <span className={`rpos${p.pos<=3?` p${p.pos}`:""}`}>{p.pos<=3?["🥇","🥈","🥉"][p.pos-1]:p.pos}</span>
             <div style={{width:3,height:24,borderRadius:2,background:p.color,flexShrink:0}}/>
-            <div style={{flex:1}}><div className="rdv">{p.flag} {p.drv} · {p.name.split(" ").pop()}</div><div className="rtm">{p.team}</div></div>
+            <div style={{flex:1}}><div className="rdv"><Flag f={p.flag}/> {p.drv} · {p.name.split(" ").pop()}</div><div className="rtm">{p.team}</div></div>
             <span className="rgp">{p.gap}</span>
             <span className="rpt">{p.pts>0?`+${p.pts}`:"—"}</span>
           </div>))}
@@ -367,7 +384,7 @@ function Alerts(){
       <div className="ptitle" style={{fontSize:".76rem"}}>Prochaine alerte</div>
       <div className="card" style={{padding:"12px 14px"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:"1.4rem"}}>{gp.flag}</span>
+          <span style={{fontSize:"1.4rem"}}><Flag f={gp.flag}/></span>
           <div style={{flex:1}}>
             <div style={{fontWeight:700,fontSize:".9rem"}}>{gp.name}</div>
             <div style={{fontSize:".76rem",color:"var(--g)"}}>{S_LBL[ns.k]||ns.k} · {fmtD(ns.t)} à {fmtT(ns.t)}</div>
@@ -401,7 +418,7 @@ function Alerts(){
           const n=nxtSess(g); if(!n) return null;
           return(<div key={g.round} className="sr">
             <span className="sk">{S_SHT[n.k]||n.k}</span>
-            <span className="sn">{g.flag} {g.name}</span>
+            <span className="sn"><Flag f={g.flag}/> {g.name}</span>
             <span className="st"><strong>{fmtT(n.t)}</strong>{fmtD(n.t)}</span>
           </div>);
         })}
@@ -430,7 +447,7 @@ function Detail({gp,onBack}){
           <div style={{fontSize:".78rem",color:"var(--g)",marginTop:3}}>{gp.circuit}</div>
           <div style={{fontSize:".76rem",color:"var(--g)",marginTop:1}}>{gp.city}, {gp.country}</div>
         </div>
-        <span style={{fontSize:"2.3rem"}}>{gp.flag}</span>
+        <span style={{fontSize:"2.3rem"}}><Flag f={gp.flag}/></span>
       </div>
       <div style={{marginTop:9,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
         <SBadge st={st}/>
@@ -457,7 +474,7 @@ function Detail({gp,onBack}){
               {r.top.map(p=>(<div key={p.pos} className="rrow">
                 <span className={`rpos${p.pos<=3?` p${p.pos}`:""}`}>{p.pos<=3?["🥇","🥈","🥉"][p.pos-1]:p.pos}</span>
                 <div style={{width:3,height:24,borderRadius:2,background:p.color,flexShrink:0}}/>
-                <div style={{flex:1}}><div className="rdv">{p.flag} {p.drv} · {p.name.split(" ").pop()}</div><div className="rtm">{p.team}</div></div>
+                <div style={{flex:1}}><div className="rdv"><Flag f={p.flag}/> {p.drv} · {p.name.split(" ").pop()}</div><div className="rtm">{p.team}</div></div>
                 <span className="rgp">{p.gap}</span>
                 <span className="rpt">{p.pts>0?`+${p.pts}`:"—"}</span>
               </div>))}
