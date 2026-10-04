@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchCalendar, fetchDrivers, fetchConstructors, fetchResults } from "./api";
+import Intro from "./Intro";
 
 // ─── DONNÉES (remplies automatiquement par l'API Jolpica-F1) ─────
 const CAL = [];
@@ -64,52 +65,6 @@ const TeamLogo = ({ id, name, color }) => {
       onError={() => setErr(true)}
       style={{height:"1.5em",width:"1.5em",objectFit:"contain",verticalAlign:"middle"}}
     />
-  );
-};// ─── INTRO : une F1 traverse l'écran ──────────────────────────────
-function Intro({onDone}){
-  const [out,setOut]=useState(false);
-  const cb=React.useRef(onDone);
-  cb.current=onDone;
-  useEffect(()=>{
-    const t1=setTimeout(()=>setOut(true),2600);
-    const t2=setTimeout(()=>cb.current(),3200);
-    return()=>{clearTimeout(t1);clearTimeout(t2);};
-  },[]);
-  const skip=()=>{setOut(true);setTimeout(()=>cb.current(),400);};
-  const Wheel=({cx,cy,r})=>(
-    <g>
-      <circle cx={cx} cy={cy} r={r} fill="#111" stroke="#333" strokeWidth="2"/>
-      <g className="wheel-spin">
-        {[0,60,120].map(a=><line key={a} x1={cx-r*.55} y1={cy} x2={cx+r*.55} y2={cy} stroke="#777" strokeWidth="2.5" transform={`rotate(${a} ${cx} ${cy})`}/>)}
-        <circle cx={cx} cy={cy} r={r*.22} fill="#999"/>
-      </g>
-    </g>
-  );
-  return(
-    <div className={`intro${out?" out":""}`} onClick={skip}>
-      <div className="intro-lines">
-        {[28,38,46,54,62,72].map((t,i)=><span key={t} style={{top:`${t}%`,animationDelay:`${1.1+i*0.13}s`}}/>)}
-      </div>
-      <div className="intro-car">
-        <svg viewBox="0 0 400 110" width="100%">
-          <ellipse cx="200" cy="105" rx="175" ry="4" fill="rgba(0,0,0,.5)"/>
-          <rect x="16" y="18" width="5" height="34" rx="2" fill="#f0f0f4"/>
-          <rect x="18" y="22" width="40" height="7" rx="2" fill="#e8002d"/>
-          <rect x="30" y="29" width="4" height="26" fill="#222"/>
-          <path d="M30 78 L52 58 L110 52 L150 40 L195 38 L222 50 L262 54 L340 68 L384 76 L384 82 L30 82 Z" fill="#e8002d"/>
-          <path d="M120 69 L300 72 L300 76 L120 74 Z" fill="#f0f0f4" opacity=".9"/>
-          <path d="M150 40 L162 26 L186 26 L196 38 Z" fill="#b80024"/>
-          <path d="M205 50 L225 50 L226 54 L205 54 Z" fill="#111"/>
-          <circle cx="214" cy="44" r="7" fill="#ffca28"/>
-          <path d="M200 52 Q216 34 238 52" fill="none" stroke="#222" strokeWidth="3" strokeLinecap="round"/>
-          <rect x="350" y="84" width="46" height="5" rx="2" fill="#f0f0f4"/>
-          <rect x="392" y="78" width="4" height="12" fill="#e8002d"/>
-          <Wheel cx={96} cy={80} r={25}/>
-          <Wheel cx={316} cy={82} r={22}/>
-        </svg>
-      </div>
-      <div className="intro-skip">Touche pour passer</div>
-    </div>
   );
 }
 
