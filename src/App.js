@@ -48,6 +48,24 @@ const Flag = ({ f }) => {
     />
   );
 };
+const TeamLogo = ({ id, name, color }) => {
+  const [err, setErr] = useState(false);
+  if (err || !id) {
+    return (
+      <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:"1.5em",height:"1.5em",borderRadius:5,background:color,color:"#000",fontSize:".6em",fontWeight:900,verticalAlign:"middle"}}>
+        {(name||"?").slice(0,2).toUpperCase()}
+      </span>
+    );
+  }
+  return (
+    <img
+      src={`/logos/${id}.png`}
+      alt={name}
+      onError={() => setErr(true)}
+      style={{height:"1.5em",width:"1.5em",objectFit:"contain",verticalAlign:"middle"}}
+    />
+  );
+};
 
 // ─── CSS ──────────────────────────────────────────────────────────
 const CSS=`
@@ -292,7 +310,7 @@ function Standings(){
           <span className={`pn${c.pos<=3?" t3":""}`}>{c.pos}</span>
           <div className="tb" style={{background:c.color}}/>
           <div className="di" style={{flex:1}}>
-            <div className="dn"><Flag f={c.flag}/> {c.name}</div>
+          <div className="dn"><TeamLogo id={c.id} name={c.name} color={c.color}/> {c.name}</div>
             <div className="dt">{c.wins} victoire{c.wins!==1?"s":""}</div>
             <div className="pbar"><div className="pfill" style={{width:`${(c.pts/maxC)*100}%`,background:c.color}}/></div>
           </div>

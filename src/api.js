@@ -75,6 +75,7 @@ export async function fetchConstructors() {
   const d = await get("/current/constructorStandings.json");
   const list = d.StandingsTable.StandingsLists[0]?.ConstructorStandings || [];
   return list.map((s) => ({
+    id: s.Constructor.constructorId,
     pos: +s.position,
     name: s.Constructor.name,
     flag: NAT_FLAG[s.Constructor.nationality] || "🏁",
