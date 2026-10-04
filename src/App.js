@@ -148,7 +148,22 @@ body{font-family:'Rajdhani',sans-serif;color:var(--w);-webkit-font-smoothing:ant
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .slide{animation:si .3s cubic-bezier(.16,1,.3,1) forwards}
 @keyframes si{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-`;
+.app{height:100vh;height:100dvh}
+.hdr{padding-top:env(safe-area-inset-top);height:calc(54px + env(safe-area-inset-top))}
+.bnav{padding-bottom:calc(4px + env(safe-area-inset-bottom));height:calc(62px + env(safe-area-inset-bottom))}
+.di,.gi,.sn{min-width:0}
+.dn,.gn,.gc,.rdv{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:480px){
+  .inner{padding:12px 10px 8px}
+  .nb{min-width:0;flex:1;padding:6px 2px;font-size:.62rem}
+  .htitle{font-size:1.05rem}
+  .cn{font-size:1.35rem}
+  .dn{font-size:.9rem}
+  .dt{font-size:.72rem}
+  .rgp{min-width:0;font-size:.64rem}
+  .gdate{font-size:.66rem}
+  .sk{width:46px}
+}`;
 
 // ─── ICONS ────────────────────────────────────────────────────────
 const ICP={
