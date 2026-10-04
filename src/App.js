@@ -265,30 +265,38 @@ function Home({fav,setFav}){
 // ═══ PAGE CALENDRIER ══════════════════════════════════════════════
 function Calendar({onGP}){
   const sprints=CAL.filter(g=>g.hasSprint);
+  const todo=CAL.filter(g=>gpSt(g)!=="finished");   // en cours + à venir
+  const done=CAL.filter(g=>gpSt(g)==="finished");   // terminés
+
+  const card=gp=>{
+    const st=gpSt(gp);
+    return(<div key={gp.round} className={`gpc ${st}`} onClick={()=>onGP(gp)}>
+      <div className="gpci">
+        <span className="rnum">R{gp.round}</span>
+        <span style={{fontSize:"1.2rem"}}><Flag f={gp.flag}/></span>
+        <div className="gi">
+          <div className="gn">{gp.name}</div>
+          <div className="gc">{gp.circuit} · {gp.city}</div>
+          {gp.hasSprint&&<span className="chip chip-sp" style={{fontSize:".54rem",marginTop:3}}>🏃 Sprint</span>}
+        </div>
+        <div style={{textAlign:"right",marginRight:5}}>
+          <div className="gdate">{fmtFull(gp.sessions.race)}</div>
+          <SBadge st={st}/>
+        </div>
+        <Ic n="chev" s={13}/>
+      </div>
+    </div>);
+  };
+
   return(<div className="fade">
     <div className="ptitle">Calendrier F1 {new Date().getFullYear()} — {CAL.length} GP</div>
     {sprints.length>0&&(
       <div className="ibox">🏃 {sprints.length} weekends Sprint : {sprints.map(g=>g.name.replace(" GP","")).join(", ")}</div>
     )}
-    {CAL.map(gp=>{
-      const st=gpSt(gp);
-      return(<div key={gp.round} className={`gpc ${st}`} onClick={()=>onGP(gp)}>
-        <div className="gpci">
-          <span className="rnum">R{gp.round}</span>
-          <span style={{fontSize:"1.2rem"}}><Flag f={gp.flag}/></span>
-          <div className="gi">
-            <div className="gn">{gp.name}</div>
-            <div className="gc">{gp.circuit} · {gp.city}</div>
-            {gp.hasSprint&&<span className="chip chip-sp" style={{fontSize:".54rem",marginTop:3}}>🏃 Sprint</span>}
-          </div>
-          <div style={{textAlign:"right",marginRight:5}}>
-            <div className="gdate">{fmtFull(gp.sessions.race)}</div>
-            <SBadge st={st}/>
-          </div>
-          <Ic n="chev" s={13}/>
-        </div>
-      </div>);
-    })}
+    {todo.length>0&&<div className="ptitle" style={{fontSize:".76rem"}}>À venir · {todo.length}</div>}
+    {todo.map(card)}
+    {done.length>0&&<div className="ptitle" style={{fontSize:".76rem",marginTop:16}}>Terminés · {done.length}</div>}
+    {done.map(card)}
   </div>);
 }
 
