@@ -224,7 +224,7 @@ function Home({fav,setFav}){
         </div>
         <span style={{fontSize:"2rem",marginLeft:7}}><Flag f={gp.flag}/></span>
       </div>
-      {ns&&<div style={{marginTop:12}}><Cd target={ns.t} label={`${S_LBL[ns.k]||ns.k} — ${fmtD(ns.t)} ${fmtT(ns.t)}`}/></div>}
+      <div style={{marginTop:12}}><Cd target={gp.sessions.race} label={`Départ de la course — ${fmtD(gp.sessions.race)} ${fmtT(gp.sessions.race)}`}/></div>
     </div>
     <div style={{marginBottom:14}}>
       <div className="ptitle">Sessions du weekend</div>
@@ -487,7 +487,7 @@ function Detail({gp,onBack}){
         {gp.hasSprint&&<span className="chip chip-sp">🏃 Sprint</span>}
         <span className="chip">🏎 {fmtFull(gp.sessions.race)}</span>
       </div>
-      {ns&&st==="upcoming"&&<div style={{marginTop:12}}><Cd target={ns.t} label={`${S_LBL[ns.k]||ns.k} · ${fmtD(ns.t)} ${fmtT(ns.t)}`}/></div>}
+      {st!=="finished"&&<div style={{marginTop:12}}><Cd target={gp.sessions.race} label={`Départ de la course — ${fmtD(gp.sessions.race)} ${fmtT(gp.sessions.race)}`}/></div>}
     </div>
     <div className="tabs">
       <button className={`tab${tab==="sessions"?" on":""}`} onClick={()=>setTab("sessions")}>Sessions</button>
