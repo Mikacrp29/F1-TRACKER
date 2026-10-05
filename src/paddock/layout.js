@@ -4,21 +4,20 @@ export const SCREEN_Y = 2.2;     // hauteur du centre de l'écran mural
 export const ROW_Z = -16;        // profondeur de la rangée de garages
 export const YAW = -Math.PI / 2; // ouverture du garage tournée vers la caméra (+z)
 
-export const HOME_Y = 2.0;       // hauteur de la caméra dans le paddock
-export const HOME_Z = 10;        // distance : plus petit = plus près des garages
-export const HOME_LOOK_Y = 2.6;
+export const HOME_Y = 1.65;      // hauteur des yeux, debout dans la pit-lane
+export const HOME_Z = 8;         // distance : plus petit = plus près des garages
+export const HOME_LOOK_Y = 2.5;
 export const PAN_MAX = 14;       // limite du déplacement gauche/droite
 
 const GREEN = "#b8f400";
-const RED = "#ff3b30";
 
 // page = identifiant de page déjà utilisé par App.js
 export const GARAGES = [
-  { id: "results",   page: "results",   label: "RÉSULTATS",  x: -18, accent: GREEN },
-  { id: "calendar",  page: "calendar",  label: "CALENDRIER", x: -9,  accent: GREEN },
-  { id: "home",      page: "home",      label: "ACCUEIL",    x: 0,   accent: GREEN },
-  { id: "standings", page: "standings", label: "CLASSEMENT", x: 9,   accent: GREEN },
-  { id: "alerts",    page: "alerts",    label: "ALERTE",     x: 18,  accent: RED },
+  { id: "results",   page: "results",   label: "RÉSULTATS",  x: -18, num: "04", accent: GREEN },
+  { id: "calendar",  page: "calendar",  label: "CALENDRIER", x: -9,  num: "02", accent: GREEN },
+  { id: "home",      page: "home",      label: "ACCUEIL",    x: 0,   num: "01", accent: GREEN },
+  { id: "standings", page: "standings", label: "CLASSEMENT", x: 9,   num: "03", accent: GREEN },
+  { id: "alerts",    page: "alerts",    label: "ALERTE",     x: 18,  num: "05", accent: GREEN }, // passe au rouge seulement si une alerte est active
 ].map((g) => ({ ...g, z: ROW_Z, yaw: YAW }));
 
 // garages décoratifs (non cliquables) aux deux extrémités
