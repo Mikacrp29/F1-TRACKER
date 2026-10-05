@@ -1,0 +1,32 @@
+.pdk-root{position:fixed;inset:0;z-index:1;background:#06070a;overflow:hidden;touch-action:none}
+.pdk-root canvas{display:block}
+
+/* HUD discret (au-dessus de tout, y compris des écrans 3D) */
+.pdk-hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 0;z-index:2000000000;pointer-events:none}
+.pdk-brand{pointer-events:auto;display:flex;align-items:center;gap:9px;background:none;border:0;color:#f0f0f4;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.8rem;letter-spacing:.14em;padding:6px 0;cursor:default}
+.pdk-brand b{color:#b8f400}
+.pdk-brand.back{cursor:pointer}
+.pdk-back{font-weight:700;font-size:.62rem;letter-spacing:.18em;color:#b8f400;border:1px solid rgba(184,244,0,.4);border-radius:20px;padding:4px 10px;background:rgba(6,7,10,.6)}
+.pdk-dot{width:7px;height:7px;border-radius:50%;background:#b8f400;box-shadow:0 0 10px #b8f400;animation:pulse 1.6s infinite}
+.pdk-status{font-family:'Orbitron',sans-serif;font-size:.5rem;font-weight:700;letter-spacing:.14em;color:#8888a0}
+.pdk-hint{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom));text-align:center;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:#8888a0;pointer-events:none;z-index:2000000000;animation:pdk-hint 9s 3.5s both}
+@keyframes pdk-hint{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+
+/* Écran mural (page réelle de l'app) */
+.pdk-screen{display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(14,15,18,.97),rgba(8,9,11,.98));border:1px solid rgba(184,244,0,.35);border-radius:8px;overflow:hidden;color:var(--w);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 40px rgba(184,244,0,.12);animation:pdk-in .6s cubic-bezier(.16,1,.3,1) both}
+.pdk-bar{flex:0 0 26px;display:flex;align-items:center;gap:8px;padding:0 12px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.56rem;letter-spacing:.22em;color:var(--red);border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.35)}
+.pdk-led{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 1.6s infinite}
+.pdk-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#222228 transparent}
+@keyframes pdk-in{from{opacity:0;filter:brightness(2.2)}to{opacity:1;filter:none}}
+
+/* Thème : l'accent rouge de l'app devient vert fluo dans les garages ; Alerte garde le rouge */
+.pdk-green{--red:#b8f400}
+.pdk-red{--red:#ff3b30;border-color:rgba(255,59,48,.4);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 40px rgba(255,59,48,.14)}
+.pdk-green .tab.on{color:#0a1002}
+.pdk-green .hero{background:linear-gradient(135deg,#0b1004 0%,#0e1208 45%,#0d0d12 100%);border-color:rgba(184,244,0,.22)}
+.pdk-green .hero::before{background:radial-gradient(circle,rgba(184,244,0,.12) 0%,transparent 70%)}
+.pdk-green .cu{border-color:rgba(184,244,0,.14)}
+.pdk-green .cn{text-shadow:0 0 16px rgba(184,244,0,.4)}
+.pdk-green .sr.next{background:rgba(184,244,0,.08);border-color:rgba(184,244,0,.22)}
+.pdk-green .gpc:hover{border-color:rgba(184,244,0,.35)}
+.pdk-green .gpc.ongoing{border-color:rgba(184,244,0,.5)}

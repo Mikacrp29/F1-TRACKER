@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { fetchCalendar, fetchDrivers, fetchConstructors, fetchResults } from "./api";
 import Intro from "./Intro";
+import { supportsPaddock, PaddockBoundary } from "./paddock/support";
+
+// la 3D est chargée à part (lazy) : elle n'alourdit pas le démarrage
+const Paddock = lazy(() => import("./paddock/Paddock"));
 
 // ─── DONNÉES (remplies automatiquement par l'API Jolpica-F1) ─────
 const CAL = [];
@@ -562,6 +566,7 @@ export default function App(){
   const [fav,setFav]=useState(null);
   const [,setTick]=useState(0);
   const [status,setStatus]=useState("loading");
+  const [paddockOn,setPaddockOn]=useState(()=>supportsPaddock());
   const [intro,setIntro]=useState(()=>{
   try{
     if(sessionStorage.getItem("f1intro"))return false;
@@ -597,37 +602,44 @@ const finishIntro=()=>{
     return()=>{stop=true;clearInterval(id);};
   },[]);
 
-  const go=p=>{setPage(p);setSelGP(null);};
-  const openGP=g=>{setSelGP(g);setPage("detail");};
-  const ready=CAL.length>0;
+   // le contenu de la page courante, partagé par l'interface classique ET les garages 3D
+  const content=(<>
+    {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
+    {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
+    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav}/>}
+    {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
+    {ready&&page==="standings"&&<Standings/>}
+    {ready&&page==="results"  &&<Results/>}
+    {ready&&page==="alerts"   &&<Alerts/>}
+    {ready&&page==="detail"&&selGP&&<Detail gp={selGP} onBack={()=>go("calendar")}/>}
+  </>);
 
   return(<>
     <style>{CSS}</style>
     {intro&&<Intro onDone={finishIntro}/>}
-    <div className="app">
-      <header className="hdr">
-        <div className="logo"><div className="dot"/><span className="logo-r">F1</span><span>TRACKER</span></div>
-        <span className="b26">{status==="loading"?"CHARGEMENT…":status==="error"?"HORS LIGNE":`LIVE · ${new Date().getFullYear()}`}</span>
-      </header>
-      <div className="scroll">
-        <div className="inner">
-          {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
-          {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
-          {ready&&page==="home"     &&<Home fav={fav} setFav={setFav}/>}
-          {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
-          {ready&&page==="standings"&&<Standings/>}
-          {ready&&page==="results"  &&<Results/>}
-          {ready&&page==="alerts"   &&<Alerts/>}
-          {ready&&page==="detail"&&selGP&&<Detail gp={selGP} onBack={()=>go("calendar")}/>}
+    {paddockOn?(
+      <PaddockBoundary onFail={()=>setPaddockOn(false)}>
+        <Suspense fallback={null}>
+          <Paddock introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel}>{content}</Paddock>
+        </Suspense>
+      </PaddockBoundary>
+    ):(
+      <div className="app">
+        <header className="hdr">
+          <div className="logo"><div className="dot"/><span className="logo-r">F1</span><span>TRACKER</span></div>
+          <span className="b26">{statusLabel}</span>
+        </header>
+        <div className="scroll">
+          <div className="inner">{content}</div>
         </div>
+        <nav className="bnav">
+          {NAV.map(({id,ico,lbl})=>(
+            <button key={id} className={`nb${(page===id||(page==="detail"&&id==="calendar"))?" on":""}`} onClick={()=>go(id)}>
+              <Ic n={ico} s={20}/>{lbl}
+            </button>
+          ))}
+        </nav>
       </div>
-      <nav className="bnav">
-        {NAV.map(({id,ico,lbl})=>(
-          <button key={id} className={`nb${(page===id||(page==="detail"&&id==="calendar"))?" on":""}`} onClick={()=>go(id)}>
-            <Ic n={ico} s={20}/>{lbl}
-          </button>
-        ))}
-      </nav>
-    </div>
+    )}
   </>);
 }
