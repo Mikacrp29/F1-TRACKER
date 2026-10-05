@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
-import { GARAGE_X } from "./layout";
 import { Box, BOX, MAT, Tires } from "./shared";
 
-// Un garage. Repère local : l'ouverture regarde +x (côté gauche) ; le côté droit est tourné de 180°.
+// Un garage. Repère local : l'ouverture regarde +x ; `g.yaw` la tourne vers la caméra.
 export default function Garage({ g, decor = false, active = false, anyActive = false, alertActive = false, lights = true, onSelect }) {
   const accent = g.accent || "#b8f400";
   const isAlert = g.id === "alerts";
@@ -47,12 +46,13 @@ export default function Garage({ g, decor = false, active = false, anyActive = f
   const click = (e) => {
     if (anyActive) return;
     e.stopPropagation();
+    if (e.delta > 8) { out(); return; } // c'était un glissement, pas un clic
     out();
     if (onSelect) onSelect(g.id);
   };
 
   return (
-    <group position={[g.side * GARAGE_X, 0, g.z]} rotation={[0, g.side === 1 ? Math.PI : 0, 0]}>
+    <group position={[g.x, 0, g.z]} rotation={[0, g.yaw, 0]}>
       {/* structure */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]} material={MAT.floor}>
         <planeGeometry args={[8, 7.4]} />
@@ -69,7 +69,7 @@ export default function Garage({ g, decor = false, active = false, anyActive = f
       <Box p={[4.35, 3.2, 0]} s={[0.06, 0.07, 7.4]} m={ledMat} />
       <Box p={[4.35, 1.6, 3.6]} s={[0.05, 2.9, 0.06]} m={ledMat} />
       <Box p={[4.35, 1.6, -3.6]} s={[0.05, 2.9, 0.06]} m={ledMat} />
-      <Text position={[4.345, 4.05, 0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.6} letterSpacing={0.1} color="#f0f0f4" anchorX="center" anchorY="middle">
+      <Text position={[4.345, 4.05, 0]} rotation={[0, Math.PI / 2, 0]} fontSize={0.8} letterSpacing={0.08} color="#f0f0f4" anchorX="center" anchorY="middle">
         {g.label}
       </Text>
       <Box p={[4.34, 3.58, 0]} s={[0.03, 0.06, 2.4]} m={ledMat} />

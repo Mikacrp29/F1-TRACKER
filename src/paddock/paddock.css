@@ -30,3 +30,9 @@
 .pdk-green .sr.next{background:rgba(184,244,0,.08);border-color:rgba(184,244,0,.22)}
 .pdk-green .gpc:hover{border-color:rgba(184,244,0,.35)}
 .pdk-green .gpc.ongoing{border-color:rgba(184,244,0,.5)}
+
+/* Flèches discrètes pour passer d'un garage à l'autre */
+.pdk-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:64px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(184,244,0,.25);background:rgba(6,7,10,.45);color:#b8f400;font-size:1.7rem;line-height:1;border-radius:8px;cursor:pointer;z-index:2000000000;opacity:.7;transition:opacity .15s,border-color .15s}
+.pdk-arrow:hover{opacity:1;border-color:rgba(184,244,0,.6)}
+.pdk-arrow.l{left:10px}
+.pdk-arrow.r{right:10px}
