@@ -601,6 +601,12 @@ const finishIntro=()=>{
     const id=setInterval(refresh,5*60*1000); // rafraîchit toutes les 5 min
     return()=>{stop=true;clearInterval(id);};
   },[]);
+  
+  const go=p=>{setPage(p);setSelGP(null);};
+  const openGP=g=>{setSelGP(g);setPage("detail");};
+  const ready=CAL.length>0;
+  const alertActive=ready&&gpSt(nxtGP())==="ongoing";
+  const statusLabel=status==="loading"?"CHARGEMENT…":status==="error"?"HORS LIGNE":`LIVE · ${new Date().getFullYear()}`;
 
    // le contenu de la page courante, partagé par l'interface classique ET les garages 3D
   const content=(<>
