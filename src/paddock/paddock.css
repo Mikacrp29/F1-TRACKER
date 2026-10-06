@@ -1,27 +1,52 @@
-.pdk-root{position:fixed;inset:0;z-index:1;background:#06070a;overflow:hidden;touch-action:none}
-.pdk-root canvas{display:block}
+.pdk-root{position:fixed;inset:0;z-index:1;background:#05070b;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;--px:0;--py:0}
 
-/* HUD discret (au-dessus de tout, y compris des écrans 3D) */
-.pdk-hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 0;z-index:2000000000;pointer-events:none}
-.pdk-brand{pointer-events:auto;display:flex;align-items:center;gap:9px;background:none;border:0;color:#f0f0f4;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.8rem;letter-spacing:.14em;padding:6px 0;cursor:default}
+/* profondeur : léger parallaxe souris + dérive très lente (le décor "respire") */
+.pdk-par{position:absolute;inset:0;transform:translate3d(calc(var(--px) * -10px),calc(var(--py) * -6px),0);transition:transform .5s ease-out}
+.pdk-root.still .pdk-par{transform:none}
+.pdk-drift{position:absolute;inset:0;animation:pdk-drift 20s ease-in-out infinite alternate}
+@keyframes pdk-drift{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.012) translate3d(-4px,-2px,0)}}
+.pdk-layer{position:absolute;left:0;top:0;transform-origin:0 0}
+.pdk-layer img{display:block;width:100%;height:100%;pointer-events:none;-webkit-user-drag:none}
+.pdk-vig{position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at 50% 55%,transparent 55%,rgba(0,0,0,.42) 100%)}
+
+/* zones cliquables des garages : simple lueur au survol / au toucher */
+.pdk-hot{position:absolute;display:block;background:transparent;border:0;padding:0;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+.pdk-hot::before{content:"";position:absolute;inset:-6px;border-radius:6px;background:radial-gradient(ellipse at 50% 60%,rgba(255,255,255,.22),rgba(255,255,255,0) 68%);mix-blend-mode:screen;opacity:0;transition:opacity .25s;pointer-events:none}
+.pdk-hot:hover::before,.pdk-hot:focus-visible::before,.pdk-hot:active::before{opacity:1}
+.pdk-hot-chip{position:absolute;left:50%;bottom:4px;transform:translate(-50%,0);font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;color:#f3f5f7;background:rgba(5,7,11,.72);border:1px solid rgba(255,255,255,.16);border-radius:20px;padding:4px 10px;white-space:nowrap;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+.pdk-hot:hover .pdk-hot-chip,.pdk-hot:focus-visible .pdk-hot-chip{opacity:1;transform:translate(-50%,-6px)}
+
+/* Alerte : lumière rouge uniquement quand une alerte est active */
+.pdk-hot.alarm::after,.pdk-alarm{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 32%,rgba(255,40,30,.45),rgba(255,40,30,0) 66%);mix-blend-mode:screen;animation:pdk-alarm 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes pdk-alarm{0%,100%{opacity:.25}50%{opacity:.9}}
+
+/* HUD discret */
+.pdk-hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 16px 0;z-index:50;pointer-events:none}
+.pdk-brand{pointer-events:auto;display:flex;align-items:center;gap:9px;background:none;border:0;color:#f0f0f4;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.8rem;letter-spacing:.14em;padding:6px 0;cursor:default;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 .pdk-brand b{color:#b8f400}
 .pdk-brand.back{cursor:pointer}
 .pdk-back{font-weight:700;font-size:.62rem;letter-spacing:.18em;color:#b8f400;border:1px solid rgba(184,244,0,.4);border-radius:20px;padding:4px 10px;background:rgba(6,7,10,.6)}
 .pdk-dot{width:7px;height:7px;border-radius:50%;background:#b8f400;box-shadow:0 0 10px #b8f400;animation:pulse 1.6s infinite}
-.pdk-status{font-family:'Orbitron',sans-serif;font-size:.5rem;font-weight:700;letter-spacing:.14em;color:#8888a0}
-.pdk-hint{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom));text-align:center;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:#8888a0;pointer-events:none;z-index:2000000000;animation:pdk-hint 9s 3.5s both}
+.pdk-status{font-family:'Orbitron',sans-serif;font-size:.5rem;font-weight:700;letter-spacing:.14em;color:#a8afbb;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.pdk-hint{position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));text-align:center;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:#c3c9d4;pointer-events:none;z-index:50;text-shadow:0 1px 8px rgba(0,0,0,.8);animation:pdk-hint 9s 1.5s both}
 @keyframes pdk-hint{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.pdk-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:64px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.18);background:rgba(6,7,10,.4);color:#f0f0f4;font-size:1.7rem;line-height:1;border-radius:8px;cursor:pointer;z-index:50;opacity:.7;transition:opacity .15s,border-color .15s}
+.pdk-arrow:hover{opacity:1;border-color:rgba(184,244,0,.6)}
+.pdk-arrow.l{left:10px}
+.pdk-arrow.r{right:10px}
 
-/* Écran mural (page réelle de l'app) */
-.pdk-screen{display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(14,15,18,.97),rgba(8,9,11,.98));border:1px solid rgba(184,244,0,.35);border-radius:8px;overflow:hidden;color:var(--w);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 40px rgba(184,244,0,.12);animation:pdk-in .6s cubic-bezier(.16,1,.3,1) both}
+/* Écran du garage : la vraie page de l'app */
+.pdk-screen{display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(14,15,18,.97),rgba(8,9,11,.98));border:1px solid rgba(184,244,0,.3);border-radius:8px;overflow:hidden;color:var(--w);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 18px 60px rgba(0,0,0,.6);animation:pdk-in .6s cubic-bezier(.16,1,.3,1) both}
+.pdk-screen.panel{position:absolute;z-index:5}
 .pdk-bar{flex:0 0 26px;display:flex;align-items:center;gap:8px;padding:0 12px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.56rem;letter-spacing:.22em;color:var(--red);border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.35)}
 .pdk-led{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 1.6s infinite}
-.pdk-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#222228 transparent}
-@keyframes pdk-in{from{opacity:0;filter:brightness(2.2)}to{opacity:1;filter:none}}
+.pdk-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#222228 transparent;touch-action:pan-y}
+.pdk-body .inner{max-width:none}
+@keyframes pdk-in{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 
 /* Thème : l'accent rouge de l'app devient vert fluo dans les garages ; Alerte garde le rouge */
 .pdk-green{--red:#b8f400}
-.pdk-red{--red:#ff3b30;border-color:rgba(255,59,48,.4);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 40px rgba(255,59,48,.14)}
+.pdk-red{--red:#ff3b30;border-color:rgba(255,59,48,.4)}
 .pdk-green .tab.on{color:#0a1002}
 .pdk-green .hero{background:linear-gradient(135deg,#0b1004 0%,#0e1208 45%,#0d0d12 100%);border-color:rgba(184,244,0,.22)}
 .pdk-green .hero::before{background:radial-gradient(circle,rgba(184,244,0,.12) 0%,transparent 70%)}
@@ -30,9 +55,3 @@
 .pdk-green .sr.next{background:rgba(184,244,0,.08);border-color:rgba(184,244,0,.22)}
 .pdk-green .gpc:hover{border-color:rgba(184,244,0,.35)}
 .pdk-green .gpc.ongoing{border-color:rgba(184,244,0,.5)}
-
-/* Flèches discrètes pour passer d'un garage à l'autre */
-.pdk-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:64px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(184,244,0,.25);background:rgba(6,7,10,.45);color:#b8f400;font-size:1.7rem;line-height:1;border-radius:8px;cursor:pointer;z-index:2000000000;opacity:.7;transition:opacity .15s,border-color .15s}
-.pdk-arrow:hover{opacity:1;border-color:rgba(184,244,0,.6)}
-.pdk-arrow.l{left:10px}
-.pdk-arrow.r{right:10px}

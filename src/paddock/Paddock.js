@@ -1,57 +1,153 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas } from "@react-three/fiber";
-import { PerformanceMonitor } from "@react-three/drei";
-import PaddockScene from "./PaddockScene";
-import { getQuality } from "./support";
-import { GARAGES, GARAGE_XS, PAN_MAX, HOME_Z, ROW_Z, fovFor } from "./layout";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GARAGES, PANO, IW, IH } from "./config";
 import "./paddock.css";
 
-const clampPan = (v) => Math.max(-PAN_MAX, Math.min(PAN_MAX, v));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const reduceMotion = () => {
+  try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; }
+};
+const tf = ({ S, tx, ty }) => `translate3d(${tx}px, ${ty}px, 0) scale(${S})`;
+const EASE_OUT = "cubic-bezier(.2,.7,.2,1)";
+const EASE_IN = "cubic-bezier(.55,0,.8,.4)";
+const EASE_IO = "cubic-bezier(.6,0,.2,1)";
+const CX = 727; // centre horizontal d'une photo de garage
+const CY = 360;
 
-// Couche 3D autour de l'app existante. `children` = la page courante (déjà rendue par App.js).
+// position du panorama (0..1) qui centre un garage
+function panFor(g, vw, vh) {
+  const Sc = Math.max(vw / IW, vh / IH);
+  const range = IW * Sc - vw;
+  if (range < 24) return 0.5;
+  return clamp(((g.hot.x + g.hot.w / 2) * Sc - vw / 2) / range, 0, 1);
+}
+
+// Paddock en photos : panorama + 5 garages, caméra animée. Les pages réelles de l'app s'affichent sur l'écran du garage.
 export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel }) {
-  const [inside, setInside] = useState(null); // id du garage, ou null = devant la rangée
-  const [arrived, setArrived] = useState(false);
-  const [degraded, setDegraded] = useState(false);
-  const quality = useMemo(() => getQuality(), []);
-  const insideRef = useRef(null);
-  insideRef.current = inside;
-  const panRef = useRef(0); // position gauche/droite voulue pour la caméra
-  const drag = useRef(null);
+  const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [phase, setPhase] = useState("pano"); // pano | pre | entering | garage | screen | leaving1 | leaving2
+  const [cur, setCur] = useState(null);
+  const [pan, setPan] = useState(0.5);
+  const [dragging, setDragging] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [settled, setSettled] = useState(false);
 
-  const enter = useCallback(
-    (id) => {
-      const g = GARAGES.find((x) => x.id === id);
-      if (!g) return;
-      try { window.history.pushState({ pdk: id }, ""); } catch (e) { /* ignore */ }
-      setArrived(false);
-      setInside(id);
-      onNavigate(g.page);
-    },
-    [onNavigate]
-  );
+  const rootRef = useRef(null);
+  const drag = useRef(null);
+  const moved = useRef(0);
+  const timers = useRef([]);
+  const pendingLeave = useRef(false);
+  const preloaded = useRef({});
+  const phaseRef = useRef("pano");
+  phaseRef.current = phase;
+  const curRef = useRef(null);
+  curRef.current = cur;
+  const panRef = useRef(0.5);
+  panRef.current = pan;
+  const vpRef = useRef(vp);
+  vpRef.current = vp;
+
+  const reduce = useMemo(reduceMotion, []);
+  const k = reduce ? 0.01 : 1;
+  const D = (s) => `${(s * k).toFixed(2)}s`;
+
+  const later = useCallback((fn, s) => { timers.current.push(setTimeout(fn, s * 1000 * k)); }, [k]);
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+
+  useEffect(() => {
+    const onResize = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // pré-chargement des photos des garages (sans gêner l'affichage)
+  const preload = useCallback((g) => {
+    if (preloaded.current[g.id]) return;
+    preloaded.current[g.id] = true;
+    const im = new Image();
+    im.src = g.img;
+  }, []);
+  useEffect(() => {
+    if (!loaded) return;
+    const t = setTimeout(() => GARAGES.forEach(preload), 1200);
+    return () => clearTimeout(t);
+  }, [loaded, preload]);
+
+  // révélation du paddock quand l'intro est terminée
+  useEffect(() => {
+    if (!introDone || !loaded || revealed) return;
+    const r = requestAnimationFrame(() => requestAnimationFrame(() => setRevealed(true)));
+    return () => cancelAnimationFrame(r);
+  }, [introDone, loaded, revealed]);
+  useEffect(() => {
+    if (!revealed) return;
+    later(() => setSettled(true), 2.8);
+  }, [revealed, later]);
+
+  /* ── machine d'états de la caméra ── */
+  const startLeave = useCallback(() => {
+    if (!curRef.current) return;
+    const g = GARAGES.find((x) => x.id === curRef.current);
+    const fromScreen = phaseRef.current === "screen";
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setPhase("leaving1");
+    later(() => {
+      setPan(panFor(g, vpRef.current.w, vpRef.current.h)); // on ressort en face du garage quitté
+      setPhase("leaving2");
+      later(() => { setPhase("pano"); setCur(null); }, 1.1);
+    }, fromScreen ? 0.6 : 0.2);
+  }, [later]);
+
+  const enter = (g) => {
+    if (phaseRef.current !== "pano" || !revealed) return;
+    try { window.history.pushState({ pdk: g.id }, ""); } catch (e) { /* ignore */ }
+    pendingLeave.current = false;
+    setCur(g.id);
+    onNavigate(g.page);
+    setPhase("pre");
+  };
+
+  useEffect(() => {
+    if (phase !== "pre") return;
+    let r2 = 0;
+    const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => setPhase("entering")); });
+    return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
+  }, [phase]);
+  useEffect(() => {
+    if (phase === "entering") later(() => setPhase("garage"), 1.05);
+  }, [phase, later]);
+  useEffect(() => {
+    if (phase !== "garage") return;
+    if (pendingLeave.current) { pendingLeave.current = false; startLeave(); return; }
+    later(() => setPhase("screen"), 0.45);
+  }, [phase, later, startLeave]);
 
   // retour au paddock : bouton retour du navigateur, Échap, ou le logo en haut à gauche
   const leave = useCallback(() => {
-    if (!insideRef.current) return;
-    try { window.history.back(); } catch (e) { setArrived(false); setInside(null); }
-  }, []);
+    if (!curRef.current) return;
+    try { window.history.back(); } catch (e) { startLeave(); }
+  }, [startLeave]);
 
-  // saute d'un garage au suivant (flèches, boutons)
   const step = useCallback((dir) => {
+    if (phaseRef.current !== "pano") return;
+    const { w, h } = vpRef.current;
+    const targets = GARAGES.map((g) => panFor(g, w, h));
     let best = 0;
-    GARAGE_XS.forEach((x, i) => {
-      if (Math.abs(x - panRef.current) < Math.abs(GARAGE_XS[best] - panRef.current)) best = i;
-    });
-    const next = Math.max(0, Math.min(GARAGE_XS.length - 1, best + dir));
-    panRef.current = clampPan(GARAGE_XS[next]);
+    targets.forEach((t, i) => { if (Math.abs(t - panRef.current) < Math.abs(targets[best] - panRef.current)) best = i; });
+    setPan(targets[clamp(best + dir, 0, targets.length - 1)]);
   }, []);
 
   useEffect(() => {
-    const onPop = () => { setArrived(false); setInside(null); };
+    const onPop = () => {
+      const p = phaseRef.current;
+      if (!curRef.current) return;
+      if (p === "garage" || p === "screen") startLeave();
+      else if (p === "pre" || p === "entering") pendingLeave.current = true;
+    };
     const onKey = (e) => {
       if (e.key === "Escape") leave();
-      if (insideRef.current) return;
       if (e.key === "ArrowLeft") step(-1);
       if (e.key === "ArrowRight") step(1);
     };
@@ -61,35 +157,112 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       window.removeEventListener("popstate", onPop);
       window.removeEventListener("keydown", onKey);
     };
-  }, [leave, step]);
+  }, [leave, step, startLeave]);
 
-  // glisser (souris ou doigt) pour se promener de gauche à droite
+  // image introuvable : on laisse le filet de sécurité (PaddockBoundary) revenir à l'interface classique
+  if (failed) throw new Error("Images du paddock introuvables (public/paddock)");
+
+  /* ── géométrie de la caméra ── */
+  const { w: vw, h: vh } = vp;
+  const Sc = Math.max(vw / IW, vh / IH);
+  const dw = IW * Sc;
+  const canPan = dw - vw > 24;
+  const portrait = vw / vh < 0.9;
+  const g = GARAGES.find((x) => x.id === cur) || null;
+  const clampT = (tx, ty, S) => [clamp(tx, Math.min(0, vw - IW * S), 0), clamp(ty, Math.min(0, vh - IH * S), 0)];
+
+  const panoT = { S: Sc, tx: canPan ? -(dw - vw) * pan : (vw - dw) / 2, ty: (vh - IH * Sc) / 2 };
+  const panoIntro = (() => { const S = Sc * 1.18; return { S, tx: vw / 2 - CX * S, ty: vh / 2 - CY * S }; })();
+
+  let hotZ = panoT;
+  let gFit = panoT;
+  let gEnter = panoT;
+  let gScreen = panoT;
+  let panelW = 0, panelH = 0, panelTop = 0;
+  if (g) {
+    const Sz = Math.min(5.2, (910 / g.hot.w) * Sc); // le garage du panorama a la même taille que sur sa photo
+    const hcx = g.hot.x + g.hot.w / 2;
+    const hcy = g.hot.y + g.hot.h / 2;
+    const [hx, hy] = clampT(vw / 2 - hcx * Sz, vh / 2 - hcy * Sz, Sz);
+    hotZ = { S: Sz, tx: hx, ty: hy };
+    const [fx, fy] = clampT(vw / 2 - CX * Sc, (vh - IH * Sc) / 2, Sc);
+    gFit = { S: Sc, tx: fx, ty: fy };
+    const Se = Sc * 1.12;
+    const [ex, ey] = clampT(vw / 2 - CX * Se, vh / 2 - CY * Se, Se);
+    gEnter = { S: Se, tx: ex, ty: ey };
+    panelW = portrait ? vw * 0.94 : Math.min(vw * 0.9, 720);
+    panelH = portrait ? Math.min(vh * 0.76, 660) : Math.min(vh * 0.8, 560);
+    panelTop = (vh - panelH) / 2;
+    const Ss = Math.max(Sc, panelW / g.tv.w); // l'écran du garage occupe la largeur du panneau
+    const [sx, sy] = clampT(vw / 2 - (g.tv.x + g.tv.w / 2) * Ss, panelTop - g.tv.y * Ss, Ss);
+    gScreen = { S: Ss, tx: sx, ty: sy };
+  }
+
+  /* ── styles des couches selon la phase ── */
+  const zoomed = phase === "entering" || phase === "garage" || phase === "screen" || phase === "leaving1";
+  let panoStyle;
+  if (!revealed) {
+    panoStyle = { transform: tf(panoIntro), opacity: 0, filter: "blur(8px)", transition: "none" };
+  } else if (phase === "leaving2") {
+    panoStyle = { transform: tf(panoT), opacity: 1, transition: `transform ${D(1.1)} ${EASE_OUT}, opacity ${D(0.55)} ease` };
+  } else if (zoomed) {
+    panoStyle = { transform: tf(hotZ), opacity: 0, transition: `transform ${D(1.15)} ${EASE_IN}, opacity ${D(0.5)} ease ${D(0.6)}` };
+  } else if (phase === "pre") {
+    panoStyle = { transform: tf(panoT), opacity: 1, transition: "none" };
+  } else {
+    panoStyle = {
+      transform: tf(panoT), opacity: 1, filter: "none",
+      transition: !settled ? `transform ${D(2.6)} ${EASE_OUT}, opacity ${D(1.4)} ease, filter ${D(2)} ease` : dragging ? "none" : `transform ${D(0.45)} ${EASE_OUT}`,
+    };
+  }
+
+  const normalAlert = g && g.id === "alerts" && !alertActive; // rouge seulement s'il y a une vraie alerte
+  const baseFilter = normalAlert ? "saturate(.1) brightness(1.04)" : "";
+  const withBlur = (b) => [baseFilter, b].filter(Boolean).join(" ") || "none";
+  let garageStyle = null;
+  if (g) {
+    if (phase === "pre") garageStyle = { transform: tf(gEnter), opacity: 0, filter: withBlur(""), transition: "none" };
+    else if (phase === "entering" || phase === "garage") garageStyle = { transform: tf(gFit), opacity: 1, filter: withBlur(""), transition: `transform ${D(1.4)} ${EASE_OUT} ${D(0.45)}, opacity ${D(0.6)} ease ${D(0.6)}` };
+    else if (phase === "screen") garageStyle = { transform: tf(gScreen), opacity: 1, filter: withBlur("blur(2.5px) brightness(.55)"), transition: `transform ${D(0.95)} ${EASE_IO}, filter ${D(0.9)} ease` };
+    else if (phase === "leaving1") garageStyle = { transform: tf(gFit), opacity: 1, filter: withBlur(""), transition: `transform ${D(0.6)} ${EASE_IO}, filter ${D(0.5)} ease` };
+    else garageStyle = { transform: tf(gEnter), opacity: 0, filter: withBlur(""), transition: `transform ${D(1.1)} ${EASE_OUT}, opacity ${D(0.55)} ease` };
+  }
+
+  /* ── interactions ── */
   const onPointerDown = (e) => {
-    if (insideRef.current) return;
+    moved.current = 0;
+    if (phaseRef.current !== "pano" || !canPan) return;
     drag.current = { x: e.clientX, pan: panRef.current };
+    setDragging(true);
   };
   const onPointerMove = (e) => {
     const d = drag.current;
-    if (!d || insideRef.current) return;
-    const h = window.innerHeight;
-    const fov = fovFor(window.innerWidth / h);
-    const dist = HOME_Z - ROW_Z;
-    const unitsPerPx = (2 * dist * Math.tan((fov * Math.PI) / 360)) / h; // le décor suit le doigt
-    panRef.current = clampPan(d.pan - (e.clientX - d.x) * unitsPerPx);
+    if (d) {
+      const dx = e.clientX - d.x;
+      moved.current = Math.max(moved.current, Math.abs(dx));
+      setPan(clamp(d.pan - dx / (dw - vw), 0, 1));
+    }
+    if (e.pointerType === "mouse" && rootRef.current) {
+      rootRef.current.style.setProperty("--px", (e.clientX / vw - 0.5).toFixed(3));
+      rootRef.current.style.setProperty("--py", (e.clientY / vh - 0.5).toFixed(3));
+    }
   };
-  const endDrag = () => { drag.current = null; };
+  const endDrag = () => { drag.current = null; setDragging(false); };
   const onWheel = (e) => {
-    if (insideRef.current) return;
+    if (phaseRef.current !== "pano" || !canPan) return;
     const dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    panRef.current = clampPan(panRef.current + dd * 0.02);
+    setPan((p) => clamp(p + dd / (dw - vw), 0, 1));
   };
   const stop = (e) => e.stopPropagation();
 
-  const onArrive = useCallback((id) => { if (id) setArrived(true); }, []);
+  const inGarage = phase === "garage" || phase === "screen";
+  const showHud = introDone && revealed;
+  const tone = g && g.id === "alerts" && alertActive ? "pdk-red" : "pdk-green";
 
   return (
     <div
-      className="pdk-root"
+      ref={rootRef}
+      className={`pdk-root${phase !== "pano" ? " still" : ""}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
@@ -97,48 +270,70 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       onPointerLeave={endDrag}
       onWheel={onWheel}
     >
-      <Canvas
-        dpr={degraded ? 1 : quality.dpr}
-        frameloop={introDone ? "always" : "demand"}
-        camera={{ fov: 48, near: 0.1, far: 170, position: [0, 1.8, 24] }}
-        gl={{ antialias: quality.aa, powerPreference: "high-performance" }}
-        style={{ position: "absolute", inset: 0 }}
-      >
-        <PerformanceMonitor flipflops={2} onFallback={() => setDegraded(true)} />
-        <Suspense fallback={null}>
-          <PaddockScene
-            inside={inside}
-            arrived={arrived}
-            introDone={introDone}
-            quality={quality}
-            degraded={degraded}
-            alertActive={alertActive}
-            onSelect={enter}
-            onArrive={onArrive}
-            screen={children}
-            panRef={panRef}
-          />
-        </Suspense>
-      </Canvas>
+      <div className="pdk-par">
+        <div className="pdk-drift">
+          {/* panorama de la voie des stands + zones cliquables */}
+          <div className="pdk-layer" style={{ width: IW, height: IH, ...panoStyle }}>
+            <img src={PANO} width={IW} height={IH} alt="" draggable={false} decoding="async" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
+            {GARAGES.map((x) => (
+              <button
+                key={x.id}
+                type="button"
+                className={`pdk-hot${x.id === "alerts" && alertActive ? " alarm" : ""}`}
+                style={{ left: x.hot.x, top: x.hot.y, width: x.hot.w, height: x.hot.h }}
+                aria-label={`Entrer dans ${x.label}`}
+                tabIndex={phase === "pano" ? 0 : -1}
+                onMouseEnter={() => preload(x)}
+                onPointerDown={() => preload(x)}
+                onClick={() => { if (moved.current > 8) return; enter(x); }}
+              >
+                <span className="pdk-hot-chip">ENTRER ›</span>
+              </button>
+            ))}
+          </div>
 
-      {introDone && (
+          {/* photo du garage choisi */}
+          {g && (
+            <div className="pdk-layer" style={{ width: IW, height: IH, ...garageStyle }}>
+              <img src={g.img} width={IW} height={IH} alt="" draggable={false} decoding="async" />
+              {g.id === "alerts" && alertActive && <div className="pdk-alarm" />}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="pdk-vig" />
+
+      {/* page réelle de l'application, posée sur l'écran du garage */}
+      {phase === "screen" && g && (
+        <div className={`pdk-screen panel ${tone}`} style={{ width: panelW, height: panelH, left: (vw - panelW) / 2, top: panelTop, animationDelay: D(0.55) }}>
+          <div className="pdk-bar">
+            <span className="pdk-led" />
+            {g.label}
+          </div>
+          <div className="pdk-body">
+            <div className="inner">{children}</div>
+          </div>
+        </div>
+      )}
+
+      {showHud && (
         <>
           <div className="pdk-hud">
-            <button type="button" className={`pdk-brand${inside ? " back" : ""}`} onPointerDown={stop} onClick={inside ? leave : undefined} aria-label={inside ? "Retour au paddock" : "F1 Tracker"}>
-              {inside ? <span className="pdk-back">‹ PADDOCK</span> : <span className="pdk-dot" />}
+            <button type="button" className={`pdk-brand${inGarage ? " back" : ""}`} onPointerDown={stop} onClick={inGarage ? leave : undefined} aria-label={inGarage ? "Retour au paddock" : "F1 Tracker"}>
+              {inGarage ? <span className="pdk-back">‹ PADDOCK</span> : <span className="pdk-dot" />}
               <span>
                 F1 <b>TRACKER</b>
               </span>
             </button>
             <span className="pdk-status">{statusLabel}</span>
           </div>
-          {!inside && (
+          {phase === "pano" && canPan && (
             <>
               <button type="button" className="pdk-arrow l" onPointerDown={stop} onClick={() => step(-1)} aria-label="Garage précédent">‹</button>
               <button type="button" className="pdk-arrow r" onPointerDown={stop} onClick={() => step(1)} aria-label="Garage suivant">›</button>
-              <div className="pdk-hint">Glissez pour parcourir · touchez un garage</div>
             </>
           )}
+          {phase === "pano" && <div className="pdk-hint">{canPan ? "Glissez pour parcourir · touchez un garage" : "Touchez un garage"}</div>}
         </>
       )}
     </div>
