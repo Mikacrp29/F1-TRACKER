@@ -32,6 +32,11 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   const [failed, setFailed] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [settled, setSettled] = useState(false);
+  const [gyro, setGyro] = useState(false); // mode "inclinez le téléphone"
+  const gBase = useRef(null);
+  const touchDev = useMemo(() => {
+    try { return window.matchMedia("(pointer: coarse)").matches && "DeviceOrientationEvent" in window; } catch (e) { return false; }
+  }, []);
 
   const rootRef = useRef(null);
   const drag = useRef(null);
@@ -159,6 +164,34 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     };
   }, [leave, step, startLeave]);
 
+  /* ── gyroscope : incliner le téléphone à gauche / à droite fait glisser le panorama ── */
+  useEffect(() => {
+    if (!touchDev) return;
+    try {
+      const DOE = window.DeviceOrientationEvent;
+      const needsAsk = DOE && typeof DOE.requestPermission === "function"; // iPhone : il faut un toucher pour autoriser
+      if (localStorage.getItem("pdk-gyro") === "1" && !needsAsk) setGyro(true);
+    } catch (e) { /* ignore */ }
+  }, [touchDev]);
+  useEffect(() => {
+    if (!gyro) return;
+    const RANGE = 40; // ±20° d'inclinaison = tout le panorama
+    let smooth = null;
+    const onOri = (e) => {
+      if (phaseRef.current !== "pano" || drag.current || e.gamma == null || window.innerHeight < window.innerWidth) {
+        gBase.current = null; // on se recalera à la reprise
+        return;
+      }
+      const tilt = clamp(e.gamma, -45, 45);
+      smooth = smooth === null ? tilt : smooth + (tilt - smooth) * 0.15;
+      if (gBase.current === null) gBase.current = smooth - (panRef.current - 0.5) * RANGE;
+      const next = clamp(0.5 + (smooth - gBase.current) / RANGE, 0, 1);
+      if (Math.abs(next - panRef.current) > 0.002) setPan(next);
+    };
+    window.addEventListener("deviceorientation", onOri);
+    return () => window.removeEventListener("deviceorientation", onOri);
+  }, [gyro]);
+
   // image introuvable : on laisse le filet de sécurité (PaddockBoundary) revenir à l'interface classique
   if (failed) throw new Error("Images du paddock introuvables (public/paddock)");
 
@@ -254,6 +287,23 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     setPan((p) => clamp(p + dd / (dw - vw), 0, 1));
   };
   const stop = (e) => e.stopPropagation();
+  const toggleGyro = async () => {
+    if (gyro) {
+      setGyro(false);
+      try { localStorage.setItem("pdk-gyro", "0"); } catch (e) { /* ignore */ }
+      return;
+    }
+    try {
+      const DOE = window.DeviceOrientationEvent;
+      if (DOE && typeof DOE.requestPermission === "function") {
+        const r = await DOE.requestPermission(); // iPhone : fenêtre d'autorisation
+        if (r !== "granted") return;
+      }
+      gBase.current = null;
+      setGyro(true);
+      try { localStorage.setItem("pdk-gyro", "1"); } catch (e) { /* ignore */ }
+    } catch (e) { /* refusé ou non supporté */ }
+  };
 
   const inGarage = phase === "garage" || phase === "screen";
   const showHud = introDone && revealed;
@@ -332,6 +382,14 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
               <button type="button" className="pdk-arrow l" onPointerDown={stop} onClick={() => step(-1)} aria-label="Garage précédent">‹</button>
               <button type="button" className="pdk-arrow r" onPointerDown={stop} onClick={() => step(1)} aria-label="Garage suivant">›</button>
             </>
+          )}
+          {phase === "pano" && canPan && touchDev && (
+            <button type="button" className={`pdk-gyro${gyro ? " on" : ""}`} onPointerDown={stop} onClick={toggleGyro} aria-pressed={gyro} aria-label="Incliner le téléphone pour se déplacer">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-18 12 12)" />
+                <path d="M3 12h2M19 12h2" />
+              </svg>
+            </button>
           )}
           {phase === "pano" && <div className="pdk-hint">{canPan ? "Glissez pour parcourir · touchez un garage" : "Touchez un garage"}</div>}
         </>
