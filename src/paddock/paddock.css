@@ -35,23 +35,72 @@
 .pdk-arrow.l{left:10px}
 .pdk-arrow.r{right:10px}
 
-/* Écran du garage : la vraie page de l'app */
-.pdk-screen{display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(14,15,18,.97),rgba(8,9,11,.98));border:1px solid rgba(184,244,0,.3);border-radius:8px;overflow:hidden;color:var(--w);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 18px 60px rgba(0,0,0,.6);animation:pdk-in .6s cubic-bezier(.16,1,.3,1) both}
+/* ═══ Écran du garage : la vraie page de l'app, habillée aux couleurs des garages ═══
+   acier brossé + carbone, texte crème (comme les enseignes), LED verte en petits repères, rouge seulement pour l'alerte */
+.pdk-screen{
+  --bg3:#14161b;--bg4:#20232a;--bd:rgba(255,255,255,.09);
+  --w:#ece9d6;--g:#9ba3ae;--g2:#69727e;--y:#dccb9d;--gr:#b8f400;--glow:rgba(222,198,150,.1);
+  display:flex;flex-direction:column;overflow:hidden;color:var(--w);
+  background:
+    radial-gradient(120% 90% at 85% -10%,var(--glow),transparent 55%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px),
+    linear-gradient(180deg,#121418,#0a0b0e);
+  border:1px solid rgba(255,255,255,.14);border-radius:6px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(0,0,0,.7),0 22px 70px rgba(0,0,0,.65);
+  animation:pdk-in .6s cubic-bezier(.16,1,.3,1) both}
 .pdk-screen.panel{position:absolute;z-index:5}
-.pdk-bar{flex:0 0 26px;display:flex;align-items:center;gap:8px;padding:0 12px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.56rem;letter-spacing:.22em;color:var(--red);border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.35)}
-.pdk-led{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 1.6s infinite}
-.pdk-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#222228 transparent;touch-action:pan-y}
-.pdk-body .inner{max-width:none}
+.pdk-green{--red:#b8f400}
+.pdk-red{--red:#ff3b30}
+/* ambiance de chaque garage : beige chaud (Accueil, Classement) / gris froid (Calendrier, Résultats) */
+.pdk-g-calendar,.pdk-g-results{--glow:rgba(176,198,230,.09);--y:#cfd8e3}
+.pdk-g-alerts{--glow:rgba(255,255,255,.05);--y:#cfd3d9}
+.pdk-screen.pdk-red{--glow:rgba(255,59,48,.1)} /* alerte active : lueur rouge */
+
+.pdk-bar{flex:0 0 28px;display:flex;align-items:center;gap:9px;padding:0 14px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.58rem;letter-spacing:.24em;color:var(--w);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.25));border-bottom:1px solid rgba(255,255,255,.08)}
+.pdk-bar::after{content:"F1 TRACKER";margin-left:auto;font-size:.48rem;letter-spacing:.22em;color:var(--g2)}
+.pdk-led{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.8s infinite}
+.pdk-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#2a2e36 transparent;touch-action:pan-y}
+.pdk-body .inner{max-width:none;padding:16px 16px 12px}
 @keyframes pdk-in{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 
-/* Thème : l'accent rouge de l'app devient vert fluo dans les garages ; Alerte garde le rouge */
-.pdk-green{--red:#b8f400}
-.pdk-red{--red:#ff3b30;border-color:rgba(255,59,48,.4)}
-.pdk-green .tab.on{color:#0a1002}
-.pdk-green .hero{background:linear-gradient(135deg,#0b1004 0%,#0e1208 45%,#0d0d12 100%);border-color:rgba(184,244,0,.22)}
-.pdk-green .hero::before{background:radial-gradient(circle,rgba(184,244,0,.12) 0%,transparent 70%)}
-.pdk-green .cu{border-color:rgba(184,244,0,.14)}
-.pdk-green .cn{text-shadow:0 0 16px rgba(184,244,0,.4)}
-.pdk-green .sr.next{background:rgba(184,244,0,.08);border-color:rgba(184,244,0,.22)}
-.pdk-green .gpc:hover{border-color:rgba(184,244,0,.35)}
-.pdk-green .gpc.ongoing{border-color:rgba(184,244,0,.5)}
+/* titres et blocs */
+.pdk-screen .ptitle{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--w)}
+.pdk-screen .ptitle::before{content:"";width:6px;height:6px;border-radius:1px;background:var(--red);box-shadow:0 0 8px var(--red);flex-shrink:0}
+.pdk-screen .ptitle::after{background:linear-gradient(90deg,rgba(255,255,255,.18),transparent)}
+.pdk-screen .card,.pdk-screen .sc{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));border:1px solid var(--bd);border-radius:6px}
+.pdk-screen .hero{background:radial-gradient(110% 150% at 92% 0%,rgba(220,203,157,.14),transparent 55%),linear-gradient(180deg,#171a1f,#0e1013);border:1px solid rgba(255,255,255,.12);border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.pdk-screen .hero::before{display:none}
+.pdk-screen .htitle,.pdk-screen .sv{color:var(--w)}
+.pdk-screen .cu{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-bottom:2px solid var(--red);border-radius:4px}
+.pdk-screen .cn{color:var(--w);text-shadow:0 0 18px rgba(236,233,214,.25)}
+.pdk-screen .sr.next{background:rgba(255,255,255,.05);border:0;border-left:2px solid var(--red);border-radius:2px}
+
+/* onglets : texte crème + repère LED, plus de gros aplat de couleur */
+.pdk-screen .tabs{background:rgba(0,0,0,.35);border:1px solid var(--bd);border-radius:5px;padding:2px}
+.pdk-screen .tab{border-radius:3px;color:var(--g)}
+.pdk-screen .tab.on{background:rgba(255,255,255,.07);color:var(--w);box-shadow:inset 0 -2px 0 var(--red)}
+
+/* pastilles et statuts */
+.pdk-screen .b26{color:var(--w);background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16)}
+.pdk-screen .bspr,.pdk-screen .chip-sp{color:var(--y);background:rgba(220,203,157,.08);border-color:rgba(220,203,157,.25)}
+.pdk-screen .sup{background:rgba(255,255,255,.06);color:var(--g)}
+.pdk-screen .son{background:rgba(255,255,255,.06);color:var(--red)}
+.pdk-screen .sfi{background:rgba(255,255,255,.04);color:var(--g2)}
+.pdk-screen .ibox{color:var(--g);background:rgba(220,203,157,.06);border:1px solid rgba(220,203,157,.18);border-radius:6px}
+
+/* listes : calendrier, classements, résultats */
+.pdk-screen .gpc{border-radius:6px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012))}
+.pdk-screen .gpc:hover{border-color:rgba(255,255,255,.22)}
+.pdk-screen .gpc.ongoing{border-color:var(--red);box-shadow:inset 2px 0 0 var(--red)}
+.pdk-screen .strow:hover,.pdk-screen .rrow:hover{background:rgba(255,255,255,.03)}
+.pdk-screen .card>.strow:first-child{background:linear-gradient(90deg,rgba(236,233,214,.1),rgba(236,233,214,.02));box-shadow:inset 2px 0 0 var(--red)}
+.pdk-screen .dp{color:var(--w)}
+.pdk-screen .pbar{height:2px;background:rgba(255,255,255,.08)}
+.pdk-screen .rpt{color:var(--red)}
+
+/* couleurs écrites en dur dans certaines pages (ancien rouge) */
+.pdk-screen [style*="232, 0, 45"],.pdk-screen [style*="232,0,45"]{background:rgba(255,255,255,.04) !important;border-color:rgba(255,255,255,.1) !important}
+.pdk-screen [style*="232, 0, 45"][style*="cursor"],.pdk-screen [style*="232,0,45"][style*="cursor"]{background:rgba(184,244,0,.07) !important}
+.pdk-screen [style*="232, 0, 45"][style*="relative"],.pdk-screen [style*="232,0,45"][style*="relative"]{background:radial-gradient(110% 150% at 92% 0%,rgba(220,203,157,.14),transparent 55%),linear-gradient(180deg,#171a1f,#0e1013) !important;border-color:rgba(255,255,255,.12) !important}
+.pdk-screen [style*="232, 0, 45"][style*="absolute"],.pdk-screen [style*="232,0,45"][style*="absolute"]{background:none !important}
+.pdk-green button[style*="Rajdhani"]{color:#0a1002 !important}

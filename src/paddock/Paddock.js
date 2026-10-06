@@ -371,7 +371,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
 
       {/* page réelle de l'application, posée sur l'écran du garage */}
       {phase === "screen" && g && (
-        <div className={`pdk-screen panel ${tone}`} style={{ width: panelW, height: panelH, left: (vw - panelW) / 2, top: panelTop, animationDelay: D(0.55) }}>
+        <div className={`pdk-screen panel ${tone} pdk-g-${g.id}`} style={{ width: panelW, height: panelH, left: (vw - panelW) / 2, top: panelTop, animationDelay: D(0.55) }}>
           <div className="pdk-bar">
             <span className="pdk-led" />
             {g.label}
