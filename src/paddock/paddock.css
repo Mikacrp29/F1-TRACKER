@@ -104,3 +104,36 @@
 .pdk-screen [style*="232, 0, 45"][style*="relative"],.pdk-screen [style*="232,0,45"][style*="relative"]{background:radial-gradient(110% 150% at 92% 0%,rgba(220,203,157,.14),transparent 55%),linear-gradient(180deg,#171a1f,#0e1013) !important;border-color:rgba(255,255,255,.12) !important}
 .pdk-screen [style*="232, 0, 45"][style*="absolute"],.pdk-screen [style*="232,0,45"][style*="absolute"]{background:none !important}
 .pdk-green button[style*="Rajdhani"]{color:#0a1002 !important}
+
+
+/* ═══ Infos posées dans la scène : le ciel (prochain Grand Prix) et la route (sessions du week-end) ═══ */
+.pit-layer{position:absolute;inset:0;pointer-events:none;z-index:3;transition:opacity .45s ease}
+.pit-layer.off{opacity:0}
+
+/* CIEL */
+.pit-sky-wrap{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top) + 46px);display:flex;justify-content:center;padding:0 16px;transform:translate3d(calc(var(--px) * -16px),calc(var(--py) * -8px),0);transition:transform .5s ease-out}
+.pit-sky{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px 28px;text-align:center;color:#ece9d6;text-shadow:0 2px 14px rgba(0,0,0,.75)}
+.pit-kicker{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:5px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.58rem;letter-spacing:.28em;color:#b8f400}
+.pit-kicker i{width:6px;height:6px;border-radius:50%;background:#b8f400;box-shadow:0 0 10px #b8f400;animation:pulse 1.6s infinite}
+.pit-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(1.05rem,2.4vw,1.6rem);letter-spacing:.06em;line-height:1.1}
+.pit-sub{margin-top:4px;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.8rem;letter-spacing:.08em;color:#c8cdd6}
+.pit-tag{margin-left:8px;padding:1px 7px;border:1px solid rgba(220,203,157,.5);border-radius:20px;font-size:.6rem;letter-spacing:.14em;color:#dccb9d}
+.pit-cd{display:flex;gap:12px}
+.pit-cd span{display:flex;flex-direction:column;align-items:center;min-width:44px;padding-bottom:5px;border-bottom:2px solid #b8f400}
+.pit-cd b{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(1.15rem,2.6vw,1.7rem);line-height:1}
+.pit-cd em{margin-top:3px;font-style:normal;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.5rem;letter-spacing:.2em;color:#9ba3ae}
+
+/* ROUTE : texte "peint" sur l'asphalte, en perspective */
+.pit-road-wrap{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));display:flex;justify-content:center;perspective:720px}
+.pit-road{width:min(560px,92vw);transform:rotateX(38deg);transform-origin:50% 100%;color:rgba(244,244,246,.9)}
+.pit-road-title{margin-bottom:4px;padding-bottom:7px;text-align:center;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.62rem;letter-spacing:.3em;opacity:.7;border-bottom:2px solid rgba(244,244,246,.55)}
+.pit-row{position:relative;display:flex;align-items:center;gap:12px;padding:5px 4px 5px 18px;border-bottom:1px solid rgba(244,244,246,.22);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:.06em;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.pit-k{width:62px;flex-shrink:0;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.62rem;letter-spacing:.14em}
+.pit-n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;font-size:.85rem;opacity:.85}
+.pit-t{margin-left:auto;white-space:nowrap;font-size:.85rem;opacity:.85}
+.pit-t b{font-family:'Orbitron',sans-serif;font-weight:700;font-size:.8rem}
+.pit-row.next{color:#fff}
+.pit-row.next .pit-k{color:#b8f400}
+.pit-row.next::before{content:"";position:absolute;left:3px;width:6px;height:6px;border-radius:50%;background:#b8f400;box-shadow:0 0 8px #b8f400}
+.pit-row.past{opacity:.35}
+@media (max-width:480px){.pit-n{display:none}}

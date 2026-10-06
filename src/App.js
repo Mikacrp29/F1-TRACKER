@@ -551,6 +551,38 @@ function Detail({gp,onBack}){
   </div>);
 }
 
+// ═══ INFOS POSÉES DANS LA PIT-LANE (ciel + route) ═════════════════
+function PitSky(){
+  const gp=nxtGP(),st=gpSt(gp);
+  const{d,h,m,s}=useCd(gp.sessions.race);
+  return(<div className="pit-sky">
+    <div>
+      <div className="pit-kicker"><i/>{st==="ongoing"?"EN COURS":"PROCHAIN GRAND PRIX"}</div>
+      <div className="pit-title"><Flag f={gp.flag}/> {gp.name}</div>
+      <div className="pit-sub">{gp.circuit} · {gp.city} · {fmtFull(gp.sessions.race)}{gp.hasSprint&&<span className="pit-tag">SPRINT</span>}</div>
+    </div>
+    <div className="pit-cd">
+      {[[d,"JOURS"],[h,"HEURES"],[m,"MIN"],[s,"SEC"]].map(([v,l])=>(<span key={l}><b>{String(v).padStart(2,"0")}</b><em>{l}</em></span>))}
+    </div>
+  </div>);
+}
+function PitRoad(){
+  const gp=nxtGP(),ns=nxtSess(gp),ord=sessOrd(gp);
+  return(<div className="pit-road">
+    <div className="pit-road-title">SESSIONS DU WEEK-END</div>
+    {ord.map(k=>{
+      const t=gp.sessions[k];
+      const past=new Date(t).getTime()+3600000<Date.now();
+      const next=ns&&ns.k===k;
+      return(<div key={k} className={`pit-row${next?" next":""}${past?" past":""}`}>
+        <span className="pit-k">{S_SHT[k]||k.toUpperCase()}</span>
+        <span className="pit-n">{S_LBL[k]||k}</span>
+        <span className="pit-t">{fmtD(t)} · <b>{fmtT(t)}</b></span>
+      </div>);
+    })}
+  </div>);
+}
+
 // ═══ APP ROOT ══════════════════════════════════════════════════════
 const NAV=[
   {id:"home",     ico:"home",   lbl:"Accueil"},
@@ -601,7 +633,7 @@ const finishIntro=()=>{
     const id=setInterval(refresh,5*60*1000); // rafraîchit toutes les 5 min
     return()=>{stop=true;clearInterval(id);};
   },[]);
-  
+
   const go=p=>{setPage(p);setSelGP(null);};
   const openGP=g=>{setSelGP(g);setPage("detail");};
   const ready=CAL.length>0;
@@ -626,7 +658,7 @@ const finishIntro=()=>{
     {paddockOn?(
       <PaddockBoundary onFail={()=>setPaddockOn(false)}>
         <Suspense fallback={null}>
-          <Paddock introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel}>{content}</Paddock>
+          <Paddock introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad/>:null}>{content}</Paddock>
         </Suspense>
       </PaddockBoundary>
     ):(

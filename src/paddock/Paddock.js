@@ -29,7 +29,7 @@ function panFor(g, vw, vh) {
 }
 
 // Paddock en photos : panorama + 5 garages, caméra animée. Les pages réelles de l'app s'affichent sur l'écran du garage.
-export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel }) {
+export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel, sky, road }) {
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [phase, setPhase] = useState("pano"); // pano | pre | entering | garage | screen | leaving1 | leaving2
   const [cur, setCur] = useState(null);
@@ -368,6 +368,14 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
         </div>
       </div>
       <div className="pdk-vig" />
+
+      {/* infos posées dans la scène : le ciel (prochain GP) et la route (sessions) ; elles s'effacent quand on entre dans un garage */}
+      {showHud && (sky || road) && (
+        <div className={`pit-layer${phase === "pano" ? "" : " off"}`} aria-hidden={phase !== "pano"}>
+          {sky && <div className="pit-sky-wrap">{sky}</div>}
+          {road && <div className="pit-road-wrap">{road}</div>}
+        </div>
+      )}
 
       {/* page réelle de l'application, posée sur l'écran du garage */}
       {phase === "screen" && g && (
