@@ -184,8 +184,8 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       }
       const tilt = clamp(e.gamma, -45, 45);
       smooth = smooth === null ? tilt : smooth + (tilt - smooth) * 0.15;
-      if (gBase.current === null) gBase.current = smooth - (panRef.current - 0.5) * RANGE;
-      const next = clamp(0.5 + (smooth - gBase.current) / RANGE, 0, 1);
+      if (gBase.current === null) gBase.current = smooth + (panRef.current - 0.5) * RANGE;
+      const next = clamp(0.5 - (smooth - gBase.current) / RANGE, 0, 1); // sens inversé : incliner à droite = aller à droite
       if (Math.abs(next - panRef.current) > 0.002) setPan(next);
     };
     window.addEventListener("deviceorientation", onOri);
