@@ -13,6 +13,13 @@ const EASE_IO = "cubic-bezier(.6,0,.2,1)";
 const CX = 727; // centre horizontal d'une photo de garage
 const CY = 360;
 
+// pose du panorama pour une position de défilement `pan` (0..1)
+function panoPose(vw, vh, pan) {
+  const Sc = Math.max(vw / IW, vh / IH);
+  const dw = IW * Sc;
+  return { S: Sc, tx: dw - vw > 24 ? -(dw - vw) * pan : (vw - dw) / 2, ty: (vh - IH * Sc) / 2 };
+}
+
 // position du panorama (0..1) qui centre un garage
 function panFor(g, vw, vh) {
   const Sc = Math.max(vw / IW, vh / IH);
@@ -26,19 +33,13 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [phase, setPhase] = useState("pano"); // pano | pre | entering | garage | screen | leaving1 | leaving2
   const [cur, setCur] = useState(null);
-  const [pan, setPan] = useState(0.5);
-  const [dragging, setDragging] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [settled, setSettled] = useState(false);
-  const [gyro, setGyro] = useState(false); // mode "inclinez le téléphone"
-  const gBase = useRef(null);
-  const touchDev = useMemo(() => {
-    try { return window.matchMedia("(pointer: coarse)").matches && "DeviceOrientationEvent" in window; } catch (e) { return false; }
-  }, []);
 
   const rootRef = useRef(null);
+  const layerRef = useRef(null);
   const drag = useRef(null);
   const moved = useRef(0);
   const timers = useRef([]);
@@ -48,10 +49,14 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   phaseRef.current = phase;
   const curRef = useRef(null);
   curRef.current = cur;
-  const panRef = useRef(0.5);
-  panRef.current = pan;
   const vpRef = useRef(vp);
   vpRef.current = vp;
+
+  // défilement gauche/droite : position affichée (lissée), position visée, vitesse d'élan
+  const panRef = useRef(0.5);
+  const panTarget = useRef(0.5);
+  const vel = useRef(0);
+  const dragging = useRef(false);
 
   const reduce = useMemo(reduceMotion, []);
   const k = reduce ? 0.01 : 1;
@@ -90,6 +95,36 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     later(() => setSettled(true), 2.8);
   }, [revealed, later]);
 
+  /* ── défilement fluide : une boucle d'animation écrit directement la position (sans re-rendu React) ── */
+  useEffect(() => {
+    if (phase !== "pano" || !settled) return;
+    let raf = 0;
+    let last = performance.now();
+    const loop = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      // élan après un lancer du doigt : ralentit progressivement
+      if (!dragging.current && vel.current !== 0) {
+        panTarget.current = clamp(panTarget.current + vel.current * dt, 0, 1);
+        vel.current *= Math.exp(-dt * 3.2);
+        if (Math.abs(vel.current) < 0.004 || panTarget.current <= 0 || panTarget.current >= 1) vel.current = 0;
+      }
+      // suit la cible avec un amorti : serré pendant le glissement, plus doux sinon
+      const diff = panTarget.current - panRef.current;
+      if (Math.abs(diff) > 0.00002) {
+        panRef.current += diff * (1 - Math.exp(-dt * (dragging.current ? 30 : 6.5)));
+        const el = layerRef.current;
+        if (el) {
+          const { w, h } = vpRef.current;
+          el.style.transform = tf(panoPose(w, h, panRef.current));
+        }
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [phase, settled]);
+
   /* ── machine d'états de la caméra ── */
   const startLeave = useCallback(() => {
     if (!curRef.current) return;
@@ -99,7 +134,11 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     timers.current = [];
     setPhase("leaving1");
     later(() => {
-      setPan(panFor(g, vpRef.current.w, vpRef.current.h)); // on ressort en face du garage quitté
+      // on ressort en face du garage quitté
+      const p = panFor(g, vpRef.current.w, vpRef.current.h);
+      panRef.current = p;
+      panTarget.current = p;
+      vel.current = 0;
       setPhase("leaving2");
       later(() => { setPhase("pano"); setCur(null); }, 1.1);
     }, fromScreen ? 0.6 : 0.2);
@@ -109,6 +148,9 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     if (phaseRef.current !== "pano" || !revealed) return;
     try { window.history.pushState({ pdk: g.id }, ""); } catch (e) { /* ignore */ }
     pendingLeave.current = false;
+    dragging.current = false;
+    vel.current = 0;
+    panTarget.current = panRef.current; // on fige le panorama là où il est
     setCur(g.id);
     onNavigate(g.page);
     setPhase("pre");
@@ -135,13 +177,15 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     try { window.history.back(); } catch (e) { startLeave(); }
   }, [startLeave]);
 
+  // passe au garage précédent / suivant
   const step = useCallback((dir) => {
     if (phaseRef.current !== "pano") return;
     const { w, h } = vpRef.current;
     const targets = GARAGES.map((g) => panFor(g, w, h));
     let best = 0;
-    targets.forEach((t, i) => { if (Math.abs(t - panRef.current) < Math.abs(targets[best] - panRef.current)) best = i; });
-    setPan(targets[clamp(best + dir, 0, targets.length - 1)]);
+    targets.forEach((t, i) => { if (Math.abs(t - panTarget.current) < Math.abs(targets[best] - panTarget.current)) best = i; });
+    vel.current = 0;
+    panTarget.current = targets[clamp(best + dir, 0, targets.length - 1)];
   }, []);
 
   useEffect(() => {
@@ -164,34 +208,6 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     };
   }, [leave, step, startLeave]);
 
-  /* ── gyroscope : incliner le téléphone à gauche / à droite fait glisser le panorama ── */
-  useEffect(() => {
-    if (!touchDev) return;
-    try {
-      const DOE = window.DeviceOrientationEvent;
-      const needsAsk = DOE && typeof DOE.requestPermission === "function"; // iPhone : il faut un toucher pour autoriser
-      if (localStorage.getItem("pdk-gyro") === "1" && !needsAsk) setGyro(true);
-    } catch (e) { /* ignore */ }
-  }, [touchDev]);
-  useEffect(() => {
-    if (!gyro) return;
-    const RANGE = 40; // ±20° d'inclinaison = tout le panorama
-    let smooth = null;
-    const onOri = (e) => {
-      if (phaseRef.current !== "pano" || drag.current || e.gamma == null || window.innerHeight < window.innerWidth) {
-        gBase.current = null; // on se recalera à la reprise
-        return;
-      }
-      const tilt = clamp(e.gamma, -45, 45);
-      smooth = smooth === null ? tilt : smooth + (tilt - smooth) * 0.15;
-      if (gBase.current === null) gBase.current = smooth + (panRef.current - 0.5) * RANGE;
-      const next = clamp(0.5 - (smooth - gBase.current) / RANGE, 0, 1); // sens inversé : incliner à droite = aller à droite
-      if (Math.abs(next - panRef.current) > 0.002) setPan(next);
-    };
-    window.addEventListener("deviceorientation", onOri);
-    return () => window.removeEventListener("deviceorientation", onOri);
-  }, [gyro]);
-
   // image introuvable : on laisse le filet de sécurité (PaddockBoundary) revenir à l'interface classique
   if (failed) throw new Error("Images du paddock introuvables (public/paddock)");
 
@@ -204,7 +220,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   const g = GARAGES.find((x) => x.id === cur) || null;
   const clampT = (tx, ty, S) => [clamp(tx, Math.min(0, vw - IW * S), 0), clamp(ty, Math.min(0, vh - IH * S), 0)];
 
-  const panoT = { S: Sc, tx: canPan ? -(dw - vw) * pan : (vw - dw) / 2, ty: (vh - IH * Sc) / 2 };
+  const panoT = panoPose(vw, vh, panRef.current);
   const panoIntro = (() => { const S = Sc * 1.18; return { S, tx: vw / 2 - CX * S, ty: vh / 2 - CY * S }; })();
 
   let hotZ = panoT;
@@ -243,9 +259,10 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   } else if (phase === "pre") {
     panoStyle = { transform: tf(panoT), opacity: 1, transition: "none" };
   } else {
+    // panorama au repos : pendant la révélation, mouvement lent ; ensuite la boucle d'animation pilote la position
     panoStyle = {
       transform: tf(panoT), opacity: 1, filter: "none",
-      transition: !settled ? `transform ${D(2.6)} ${EASE_OUT}, opacity ${D(1.4)} ease, filter ${D(2)} ease` : dragging ? "none" : `transform ${D(0.45)} ${EASE_OUT}`,
+      transition: !settled ? `transform ${D(2.6)} ${EASE_OUT}, opacity ${D(1.4)} ease, filter ${D(2)} ease` : "none",
     };
   }
 
@@ -261,49 +278,48 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     else garageStyle = { transform: tf(gEnter), opacity: 0, filter: withBlur(""), transition: `transform ${D(1.1)} ${EASE_OUT}, opacity ${D(0.55)} ease` };
   }
 
-  /* ── interactions ── */
+  /* ── interactions : glisser (avec élan), molette, flèches ── */
   const onPointerDown = (e) => {
     moved.current = 0;
-    if (phaseRef.current !== "pano" || !canPan) return;
-    drag.current = { x: e.clientX, pan: panRef.current };
-    setDragging(true);
+    if (phaseRef.current !== "pano" || !canPan || !settled) return;
+    dragging.current = true;
+    vel.current = 0;
+    drag.current = { x: e.clientX, start: panTarget.current, samples: [[performance.now(), panTarget.current]] };
   };
   const onPointerMove = (e) => {
     const d = drag.current;
     if (d) {
       const dx = e.clientX - d.x;
       moved.current = Math.max(moved.current, Math.abs(dx));
-      setPan(clamp(d.pan - dx / (dw - vw), 0, 1));
+      panTarget.current = clamp(d.start - dx / (dw - vw), 0, 1); // le décor suit le doigt
+      const now = performance.now();
+      d.samples.push([now, panTarget.current]);
+      while (d.samples.length > 2 && now - d.samples[0][0] > 120) d.samples.shift();
     }
     if (e.pointerType === "mouse" && rootRef.current) {
       rootRef.current.style.setProperty("--px", (e.clientX / vw - 0.5).toFixed(3));
       rootRef.current.style.setProperty("--py", (e.clientY / vh - 0.5).toFixed(3));
     }
   };
-  const endDrag = () => { drag.current = null; setDragging(false); };
+  const endDrag = () => {
+    const d = drag.current;
+    if (d && d.samples.length > 1) {
+      // lancer du doigt : le panorama continue sur sa lancée puis ralentit
+      const [t0, p0] = d.samples[0];
+      const [t1, p1] = d.samples[d.samples.length - 1];
+      const dtm = (t1 - t0) / 1000;
+      if (dtm > 0.01 && performance.now() - t1 < 80) vel.current = clamp((p1 - p0) / dtm, -3, 3);
+    }
+    drag.current = null;
+    dragging.current = false;
+  };
   const onWheel = (e) => {
-    if (phaseRef.current !== "pano" || !canPan) return;
+    if (phaseRef.current !== "pano" || !canPan || !settled) return;
     const dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    setPan((p) => clamp(p + dd / (dw - vw), 0, 1));
+    vel.current = 0;
+    panTarget.current = clamp(panTarget.current + (dd * (e.deltaMode === 1 ? 16 : 1)) / (dw - vw), 0, 1);
   };
   const stop = (e) => e.stopPropagation();
-  const toggleGyro = async () => {
-    if (gyro) {
-      setGyro(false);
-      try { localStorage.setItem("pdk-gyro", "0"); } catch (e) { /* ignore */ }
-      return;
-    }
-    try {
-      const DOE = window.DeviceOrientationEvent;
-      if (DOE && typeof DOE.requestPermission === "function") {
-        const r = await DOE.requestPermission(); // iPhone : fenêtre d'autorisation
-        if (r !== "granted") return;
-      }
-      gBase.current = null;
-      setGyro(true);
-      try { localStorage.setItem("pdk-gyro", "1"); } catch (e) { /* ignore */ }
-    } catch (e) { /* refusé ou non supporté */ }
-  };
 
   const inGarage = phase === "garage" || phase === "screen";
   const showHud = introDone && revealed;
@@ -323,7 +339,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       <div className="pdk-par">
         <div className="pdk-drift">
           {/* panorama de la voie des stands + zones cliquables */}
-          <div className="pdk-layer" style={{ width: IW, height: IH, ...panoStyle }}>
+          <div ref={layerRef} className="pdk-layer" style={{ width: IW, height: IH, ...panoStyle }}>
             <img src={PANO} width={IW} height={IH} alt="" draggable={false} decoding="async" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
             {GARAGES.map((x) => (
               <button
@@ -382,14 +398,6 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
               <button type="button" className="pdk-arrow l" onPointerDown={stop} onClick={() => step(-1)} aria-label="Garage précédent">‹</button>
               <button type="button" className="pdk-arrow r" onPointerDown={stop} onClick={() => step(1)} aria-label="Garage suivant">›</button>
             </>
-          )}
-          {phase === "pano" && canPan && touchDev && (
-            <button type="button" className={`pdk-gyro${gyro ? " on" : ""}`} onPointerDown={stop} onClick={toggleGyro} aria-pressed={gyro} aria-label="Incliner le téléphone pour se déplacer">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="7" y="3" width="10" height="18" rx="2" transform="rotate(-18 12 12)" />
-                <path d="M3 12h2M19 12h2" />
-              </svg>
-            </button>
           )}
           {phase === "pano" && <div className="pdk-hint">{canPan ? "Glissez pour parcourir · touchez un garage" : "Touchez un garage"}</div>}
         </>
