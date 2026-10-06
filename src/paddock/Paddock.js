@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GARAGES, PANO, IW, IH } from "./config";
+import { GARAGES, PANO, PW, PH, GW, GH } from "./config";
 import "./paddock.css";
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -15,15 +15,15 @@ const CY = 360;
 
 // pose du panorama pour une position de défilement `pan` (0..1)
 function panoPose(vw, vh, pan) {
-  const Sc = Math.max(vw / IW, vh / IH);
-  const dw = IW * Sc;
-  return { S: Sc, tx: dw - vw > 24 ? -(dw - vw) * pan : (vw - dw) / 2, ty: (vh - IH * Sc) / 2 };
+  const Sc = Math.max(vw / PW, vh / PH);
+  const dw = PW * Sc;
+  return { S: Sc, tx: dw - vw > 24 ? -(dw - vw) * pan : (vw - dw) / 2, ty: (vh - PH * Sc) / 2 };
 }
 
 // position du panorama (0..1) qui centre un garage
 function panFor(g, vw, vh) {
-  const Sc = Math.max(vw / IW, vh / IH);
-  const range = IW * Sc - vw;
+  const Sc = Math.max(vw / PW, vh / PH);
+  const range = PW * Sc - vw;
   if (range < 24) return 0.5;
   return clamp(((g.hot.x + g.hot.w / 2) * Sc - vw / 2) / range, 0, 1);
 }
@@ -213,15 +213,17 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
 
   /* ── géométrie de la caméra ── */
   const { w: vw, h: vh } = vp;
-  const Sc = Math.max(vw / IW, vh / IH);
-  const dw = IW * Sc;
+  const Sp = Math.max(vw / PW, vh / PH); // échelle "plein écran" du panorama
+  const Sg = Math.max(vw / GW, vh / GH); // échelle "plein écran" d'une photo de garage
+  const dw = PW * Sp;
   const canPan = dw - vw > 24;
   const portrait = vw / vh < 0.9;
   const g = GARAGES.find((x) => x.id === cur) || null;
-  const clampT = (tx, ty, S) => [clamp(tx, Math.min(0, vw - IW * S), 0), clamp(ty, Math.min(0, vh - IH * S), 0)];
+  const clampP = (tx, ty, S) => [clamp(tx, Math.min(0, vw - PW * S), 0), clamp(ty, Math.min(0, vh - PH * S), 0)];
+  const clampG = (tx, ty, S) => [clamp(tx, Math.min(0, vw - GW * S), 0), clamp(ty, Math.min(0, vh - GH * S), 0)];
 
   const panoT = panoPose(vw, vh, panRef.current);
-  const panoIntro = (() => { const S = Sc * 1.18; return { S, tx: vw / 2 - CX * S, ty: vh / 2 - CY * S }; })();
+  const panoIntro = (() => { const S = Sp * 1.18; return { S, tx: vw / 2 - (PW / 2) * S, ty: vh / 2 - (PH / 2) * S }; })();
 
   let hotZ = panoT;
   let gFit = panoT;
@@ -229,21 +231,21 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   let gScreen = panoT;
   let panelW = 0, panelH = 0, panelTop = 0;
   if (g) {
-    const Sz = Math.min(5.2, (910 / g.hot.w) * Sc); // le garage du panorama a la même taille que sur sa photo
+    const Sz = Math.min(6, (910 / g.hot.w) * Sg); // le garage du panorama a la même taille à l'écran que sur sa photo
     const hcx = g.hot.x + g.hot.w / 2;
     const hcy = g.hot.y + g.hot.h / 2;
-    const [hx, hy] = clampT(vw / 2 - hcx * Sz, vh / 2 - hcy * Sz, Sz);
+    const [hx, hy] = clampP(vw / 2 - hcx * Sz, vh / 2 - hcy * Sz, Sz);
     hotZ = { S: Sz, tx: hx, ty: hy };
-    const [fx, fy] = clampT(vw / 2 - CX * Sc, (vh - IH * Sc) / 2, Sc);
-    gFit = { S: Sc, tx: fx, ty: fy };
-    const Se = Sc * 1.12;
-    const [ex, ey] = clampT(vw / 2 - CX * Se, vh / 2 - CY * Se, Se);
+    const [fx, fy] = clampG(vw / 2 - CX * Sg, (vh - GH * Sg) / 2, Sg);
+    gFit = { S: Sg, tx: fx, ty: fy };
+    const Se = Sg * 1.12;
+    const [ex, ey] = clampG(vw / 2 - CX * Se, vh / 2 - CY * Se, Se);
     gEnter = { S: Se, tx: ex, ty: ey };
     panelW = portrait ? vw * 0.94 : Math.min(vw * 0.9, 720);
     panelH = portrait ? Math.min(vh * 0.76, 660) : Math.min(vh * 0.8, 560);
     panelTop = (vh - panelH) / 2;
-    const Ss = Math.max(Sc, panelW / g.tv.w); // l'écran du garage occupe la largeur du panneau
-    const [sx, sy] = clampT(vw / 2 - (g.tv.x + g.tv.w / 2) * Ss, panelTop - g.tv.y * Ss, Ss);
+    const Ss = Math.max(Sg, panelW / g.tv.w); // l'écran du garage occupe la largeur du panneau
+    const [sx, sy] = clampG(vw / 2 - (g.tv.x + g.tv.w / 2) * Ss, panelTop - g.tv.y * Ss, Ss);
     gScreen = { S: Ss, tx: sx, ty: sy };
   }
 
@@ -339,8 +341,8 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       <div className="pdk-par">
         <div className="pdk-drift">
           {/* panorama de la voie des stands + zones cliquables */}
-          <div ref={layerRef} className="pdk-layer" style={{ width: IW, height: IH, ...panoStyle }}>
-            <img src={PANO} width={IW} height={IH} alt="" draggable={false} decoding="async" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
+          <div ref={layerRef} className="pdk-layer" style={{ width: PW, height: PH, ...panoStyle }}>
+            <img src={PANO} width={PW} height={PH} alt="" draggable={false} decoding="async" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
             {GARAGES.map((x) => (
               <button
                 key={x.id}
@@ -360,8 +362,8 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
 
           {/* photo du garage choisi */}
           {g && (
-            <div className="pdk-layer" style={{ width: IW, height: IH, ...garageStyle }}>
-              <img src={g.img} width={IW} height={IH} alt="" draggable={false} decoding="async" />
+            <div className="pdk-layer" style={{ width: GW, height: GH, ...garageStyle }}>
+              <img src={g.img} width={GW} height={GH} alt="" draggable={false} decoding="async" />
               {g.id === "alerts" && alertActive && <div className="pdk-alarm" />}
             </div>
           )}
