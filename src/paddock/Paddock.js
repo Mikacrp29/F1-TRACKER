@@ -358,6 +358,10 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
                 <span className="pdk-hot-chip">ENTRER ›</span>
               </button>
             ))}
+
+            {/* infos posées dans la scène : elles font partie du décor et défilent avec lui (ciel = prochain GP, route = sessions) */}
+            {sky && <div className={`pit-sky-pos${phase === "pano" ? "" : " off"}`}>{sky}</div>}
+            {road && <div className={`pit-road-pos${phase === "pano" ? "" : " off"}`}>{road}</div>}
           </div>
 
           {/* photo du garage choisi */}
@@ -370,14 +374,6 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
         </div>
       </div>
       <div className="pdk-vig" />
-
-      {/* infos posées dans la scène : le ciel (prochain GP) et la route (sessions) ; elles s'effacent quand on entre dans un garage */}
-      {showHud && (sky || road) && (
-        <div className={`pit-layer${phase === "pano" ? "" : " off"}`} aria-hidden={phase !== "pano"}>
-          {sky && <div className="pit-sky-wrap">{sky}</div>}
-          {road && <div className="pit-road-wrap">{road}</div>}
-        </div>
-      )}
 
       {/* page réelle de l'application, posée sur l'écran du garage */}
       {phase === "screen" && g && (
