@@ -66,9 +66,26 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
-    const onResize = () => setVp({ w: window.innerWidth, h: window.innerHeight });
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    // on mesure la vraie zone d'affichage (et non window.innerHeight, trop petit sur iPhone en mode application)
+    const measure = () => {
+      const el = rootRef.current;
+      const w = el ? el.clientWidth : window.innerWidth;
+      const h = el ? el.clientHeight : window.innerHeight;
+      setVp((o) => (o.w === w && o.h === h ? o : { w, h }));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined" && rootRef.current) {
+      ro = new ResizeObserver(measure);
+      ro.observe(rootRef.current);
+    }
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      if (ro) ro.disconnect();
+    };
   }, []);
 
   // pré-chargement des photos des garages (sans gêner l'affichage)

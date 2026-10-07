@@ -6,7 +6,7 @@
 .pdk-drift{position:absolute;inset:0;animation:pdk-drift 20s ease-in-out infinite alternate}
 @keyframes pdk-drift{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.012) translate3d(-4px,-2px,0)}}
 .pdk-layer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
-.pdk-layer img{display:block;width:100%;height:100%;pointer-events:none;-webkit-user-drag:none}
+.pdk-layer>img{display:block;width:100%;height:100%;pointer-events:none;-webkit-user-drag:none}
 .pdk-vig{position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at 50% 55%,transparent 55%,rgba(0,0,0,.42) 100%)}
 
 /* zones cliquables des garages : simple lueur au survol / au toucher */
@@ -137,15 +137,19 @@
 .pit-row.next::before{content:"";position:absolute;left:.2em;width:.5em;height:.5em;border-radius:50%;background:#b8f400;box-shadow:0 0 .7em #b8f400}
 .pit-row.past{opacity:.4}
 
-/* téléphone : version compacte, empilée, qui tient dans la largeur de l'écran */
+/* téléphone : version compacte, empilée, placée SOUS le logo F1 TRACKER ; sessions remontées */
 @media (max-width:700px){
-  .pit-sky-pos{max-width:380px}
-  .pit-sky{flex-direction:column;gap:6px;padding:8px 14px}
-  .pit-title{font-size:26px}
-  .pit-sub{font-size:15px}
-  .pit-cd{gap:8px}
-  .pit-cd span{min-width:58px}
-  .pit-cd b{font-size:28px}
+  .pit-sky-pos{top:100px;max-width:380px}
+  .pit-sky{flex-direction:column;gap:5px;padding:6px 12px}
+  .pit-kicker{font-size:10px;margin-bottom:3px}
+  .pit-title{font-size:22px}
+  .pit-sub{font-size:12px;letter-spacing:.03em;margin-top:2px}
+  .pit-tag{margin-left:6px;padding:0 7px;font-size:10px}
+  .pit-cd{gap:7px}
+  .pit-cd span{min-width:50px;padding-bottom:3px;border-bottom-width:2px}
+  .pit-cd b{font-size:22px}
+  .pit-cd em{font-size:9px;margin-top:2px}
+  .pit-road-pos{top:746px}
   .pit-road{width:400px;font-size:14px}
   .pit-n{display:none}
 }
