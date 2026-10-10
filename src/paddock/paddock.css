@@ -125,7 +125,7 @@
 
 /* ROUTE → sessions du week-end posées SUR la porte du garage INFO (rideau : x ≈ 850 à 1172, y ≈ 355 à 545 du panorama)
    le bas du tableau (top) repose sur le sol de la porte, le centre (left) = centre de la porte */
-.pit-road-pos{left:1010px;top:543px;width:0;height:0;perspective:620px}
+.pit-road-pos{left:1010px;top:535px;width:0;height:0;perspective:620px}
 .pit-road{position:absolute;left:0;bottom:0;width:306px;font-size:13px;transform:translateX(-50%) rotateX(20deg);transform-origin:50% 100%;padding:.4em .6em .3em;color:#fff;border-radius:.3em;background:linear-gradient(180deg,rgba(4,6,10,.2),rgba(4,6,10,.62) 18%,rgba(4,6,10,.62) 90%,rgba(4,6,10,.35))}
 .pit-road-title{margin-bottom:.25em;padding-bottom:.45em;text-align:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.78em;letter-spacing:.3em;color:#fff;border-bottom:.14em solid rgba(255,255,255,.8)}
 .pit-row{position:relative;display:flex;align-items:center;gap:.8em;padding:.28em .3em .28em 1.1em;border-bottom:.07em solid rgba(255,255,255,.3);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05em;letter-spacing:.05em;text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 6px rgba(0,0,0,.7)}
