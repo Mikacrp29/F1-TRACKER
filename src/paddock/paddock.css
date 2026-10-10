@@ -150,10 +150,12 @@
   .pit-cd span{min-width:50px;padding-bottom:3px;border-bottom-width:2px}
   .pit-cd b{font-size:22px}
   .pit-cd em{font-size:9px;margin-top:2px}
-  .pit-road-pos{top:746px}
-  .pit-road{width:360px;font-size:15px;padding:.5em .5em .3em}
+  .pit-road-pos{top:746px;left:1004px}
+  .pit-road{width:284px;font-size:14px;padding:.45em .6em .3em}
   .pit-n{display:none}
-  .pit-k{width:4.2em}
+  .pit-k{width:3.9em}
+  .pit-t{gap:.5em}
+  .pit-t b{min-width:3.3em}
 }
 
 /* l'indication en bas est repoussée tout en bas pour ne pas gêner */
