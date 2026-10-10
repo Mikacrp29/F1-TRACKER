@@ -151,9 +151,8 @@
   .pit-cd b{font-size:22px}
   .pit-cd em{font-size:9px;margin-top:2px}
   .pit-road-pos{top:746px}
-  .pit-road{width:400px;font-size:15px}
+  .pit-road{width:360px;font-size:15px;padding:.5em .5em .3em}
   .pit-n{display:none}
-  .pit-road{width:360px;padding:.5em .5em .3em}
   .pit-k{width:4.2em}
 }
 
