@@ -190,7 +190,7 @@
 /* TÉLÉPHONE (tactile) : bouton ENTRER toujours visible au centre de chaque porte, sauf Accueil/Info (fermée, avec les sessions) */
 @media (hover:none),(pointer:coarse){
   .pdk-hot:not(.pdk-hot-home) .pdk-hot-chip{
-    bottom:auto;top:55%;
+    bottom:auto;top:80%;
     font-size:15px;letter-spacing:.22em;padding:9px 20px;
     color:#fff;background:rgba(5,7,11,.72);
     border:1.5px solid rgba(184,244,0,.8);
