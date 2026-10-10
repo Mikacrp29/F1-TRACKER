@@ -577,11 +577,12 @@ function PitRoad(){
       const next=ns&&ns.k===k;
       return(<div key={k} className={`pit-row${next?" next":""}${past?" past":""}`}>
         <span className="pit-k">{S_SHT[k]||k.toUpperCase()}</span>
+        <span className="pit-n">{S_LBL[k]||k}</span>
         <span className="pit-t"><i>{fmtD(t)}</i><b>{fmtH(t)}</b></span>
-        <span className="pit-t">{fmtD(t)} · <b>{fmtT(t)}</b></span>
       </div>);
     })}
   </div>);
+}
 }
 
 // ═══ APP ROOT ══════════════════════════════════════════════════════

@@ -153,6 +153,8 @@
   .pit-road-pos{top:746px}
   .pit-road{width:400px;font-size:15px}
   .pit-n{display:none}
+  .pit-road{width:360px;padding:.5em .5em .3em}
+  .pit-k{width:4.2em}
 }
 
 /* l'indication en bas est repoussée tout en bas pour ne pas gêner */
