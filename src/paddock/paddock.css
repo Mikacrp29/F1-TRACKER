@@ -155,3 +155,19 @@
 
 /* l'indication en bas est repoussée tout en bas pour ne pas gêner */
 .pdk-hint{bottom:calc(6px + env(safe-area-inset-bottom));font-size:.62rem}
+/* PC (souris) : grand bouton ENTRER au centre de la porte du garage survolé (sauf Accueil, où il y a les sessions) */
+@media (hover:hover) and (pointer:fine){
+  .pdk-hot:not(.pdk-hot-home) .pdk-hot-chip{
+    bottom:auto;top:55%;
+    font-size:22px;letter-spacing:.26em;padding:12px 32px;
+    color:#fff;background:rgba(5,7,11,.78);
+    border:2px solid rgba(184,244,0,.75);
+    box-shadow:0 0 28px rgba(184,244,0,.35);
+    transform:translate(-50%,-50%) scale(.92);
+  }
+  .pdk-hot:not(.pdk-hot-home):hover .pdk-hot-chip,
+  .pdk-hot:not(.pdk-hot-home):focus-visible .pdk-hot-chip{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+  }
+}

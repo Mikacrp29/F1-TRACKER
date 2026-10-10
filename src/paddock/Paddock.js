@@ -364,8 +364,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
               <button
                 key={x.id}
                 type="button"
-                className={`pdk-hot${x.id === "alerts" && alertActive ? " alarm" : ""}`}
-                style={{ left: x.hot.x, top: x.hot.y, width: x.hot.w, height: x.hot.h }}
+                className={`pdk-hot pdk-hot-${x.id}${x.id === "alerts" && alertActive ? " alarm" : ""}`}                style={{ left: x.hot.x, top: x.hot.y, width: x.hot.w, height: x.hot.h }}
                 aria-label={`Entrer dans ${x.label}`}
                 tabIndex={phase === "pano" ? 0 : -1}
                 onMouseEnter={() => preload(x)}
