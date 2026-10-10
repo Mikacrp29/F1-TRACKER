@@ -125,17 +125,18 @@
 
 /* ROUTE (zone libre y ≈ 605 à 780 du panorama) : texte "peint" en perspective sur un voile sombre */
 .pit-road-pos{left:1000px;top:778px;width:0;height:0;perspective:620px}
-.pit-road{position:absolute;left:0;bottom:0;width:620px;font-size:16px;transform:translateX(-50%) rotateX(34deg);transform-origin:50% 100%;padding:.5em .8em .3em;color:#fff;border-radius:.3em;background:linear-gradient(180deg,rgba(4,6,10,0),rgba(4,6,10,.62) 18%,rgba(4,6,10,.62) 90%,rgba(4,6,10,.35))}
+.pit-road{position:absolute;left:0;bottom:0;width:620px;font-size:16px;transform:translateX(-50%) rotateX(20deg);transform-origin:50% 100%;padding:.5em .8em .3em;color:#fff;border-radius:.3em;background:linear-gradient(180deg,rgba(4,6,10,0),rgba(4,6,10,.62) 18%,rgba(4,6,10,.62) 90%,rgba(4,6,10,.35))}
 .pit-road-title{margin-bottom:.25em;padding-bottom:.45em;text-align:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.78em;letter-spacing:.3em;color:#fff;border-bottom:.14em solid rgba(255,255,255,.8)}
 .pit-row{position:relative;display:flex;align-items:center;gap:.8em;padding:.38em .3em .38em 1.2em;border-bottom:.07em solid rgba(255,255,255,.3);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05em;letter-spacing:.05em;text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 6px rgba(0,0,0,.7)}
 .pit-k{width:4.6em;flex-shrink:0;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.82em;letter-spacing:.12em}
 .pit-n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;font-size:.95em;color:#f1f1ee}
-.pit-t{margin-left:auto;white-space:nowrap;font-size:.95em;color:#e8e8e4}
-.pit-t b{font-family:'Orbitron',sans-serif;font-weight:900;font-size:.95em;color:#fff}
+.pit-t{margin-left:auto;display:flex;align-items:baseline;gap:.7em;white-space:nowrap}
+.pit-t i{font-style:normal;font-size:.85em;letter-spacing:.06em;color:#b9c0cc}
+.pit-t b{min-width:3.6em;text-align:right;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.5em;letter-spacing:.04em;color:#fff;text-shadow:0 0 4px rgba(0,0,0,.95),0 1px 8px rgba(0,0,0,.8)}
 .pit-row.next{background:linear-gradient(90deg,rgba(184,244,0,.16),rgba(184,244,0,0))}
 .pit-row.next .pit-k{color:#c8ff3a}
 .pit-row.next::before{content:"";position:absolute;left:.2em;width:.5em;height:.5em;border-radius:50%;background:#b8f400;box-shadow:0 0 .7em #b8f400}
-.pit-row.past{opacity:.4}
+.pit-row.past{opacity:.55}
 
 /* téléphone : version compacte, empilée, placée SOUS le logo F1 TRACKER ; sessions remontées */
 @media (max-width:700px){
@@ -150,7 +151,7 @@
   .pit-cd b{font-size:22px}
   .pit-cd em{font-size:9px;margin-top:2px}
   .pit-road-pos{top:746px}
-  .pit-road{width:400px;font-size:14px}
+  .pit-road{width:400px;font-size:15px}
   .pit-n{display:none}
 }
 

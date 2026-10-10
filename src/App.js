@@ -17,6 +17,7 @@ const replace = (arr, items) => { if (items.length) { arr.length = 0; arr.push(.
 
 // ─── HELPERS ──────────────────────────────────────────────────────
 const fmtT    = i => new Date(i).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+const fmtH    = i => { const d=new Date(i); return String(d.getHours()).padStart(2,"0")+"h"+String(d.getMinutes()).padStart(2,"0"); };
 const fmtD    = i => new Date(i).toLocaleDateString([],{weekday:"short",day:"numeric",month:"short"});
 const fmtFull = i => new Date(i).toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});
 const S_LBL   = {fp1:"EL 1",fp2:"EL 2",fp3:"EL 3",sprintQ:"Sprint Shoot-Out",sprint:"Sprint",quali:"Qualifications",race:"Course"};
@@ -576,7 +577,7 @@ function PitRoad(){
       const next=ns&&ns.k===k;
       return(<div key={k} className={`pit-row${next?" next":""}${past?" past":""}`}>
         <span className="pit-k">{S_SHT[k]||k.toUpperCase()}</span>
-        <span className="pit-n">{S_LBL[k]||k}</span>
+        <span className="pit-t"><i>{fmtD(t)}</i><b>{fmtH(t)}</b></span>
         <span className="pit-t">{fmtD(t)} · <b>{fmtT(t)}</b></span>
       </div>);
     })}
