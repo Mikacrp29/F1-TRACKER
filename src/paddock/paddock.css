@@ -171,3 +171,18 @@
     transform:translate(-50%,-50%) scale(1);
   }
 }
+/* flèches gauche / droite plus visibles (surtout sur téléphone) + petit va-et-vient pour inviter à glisser */
+.pdk-arrow{
+  width:44px;height:84px;font-size:2.4rem;font-weight:700;
+  color:#b8f400;
+  background:rgba(6,7,10,.62);
+  border:1.5px solid rgba(184,244,0,.7);
+  box-shadow:0 0 16px rgba(184,244,0,.3),0 2px 12px rgba(0,0,0,.6);
+  opacity:1;
+  text-shadow:0 0 10px rgba(184,244,0,.7);
+}
+.pdk-arrow.l{left:6px;animation:pdk-nudge-l 1.8s ease-in-out infinite}
+.pdk-arrow.r{right:6px;animation:pdk-nudge-r 1.8s ease-in-out infinite}
+@keyframes pdk-nudge-l{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-6px)}}
+@keyframes pdk-nudge-r{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.pdk-arrow.l,.pdk-arrow.r{animation:none}}
