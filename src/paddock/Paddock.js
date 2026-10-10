@@ -111,6 +111,15 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     if (!revealed) return;
     later(() => setSettled(true), 2.8);
   }, [revealed, later]);
+  // au démarrage, on centre le panorama sur la porte INFO (et non sur le milieu exact de l'image)
+  useEffect(() => {
+    if (!loaded) return;
+    const home = GARAGES.find((x) => x.id === "home");
+    const p = panFor(home, vpRef.current.w, vpRef.current.h);
+    panRef.current = p;
+    panTarget.current = p;
+    setVp((o) => ({ ...o }));
+  }, [loaded]);
 
   /* ── défilement fluide : une boucle d'animation écrit directement la position (sans re-rendu React) ── */
   useEffect(() => {
