@@ -186,3 +186,23 @@
 @keyframes pdk-nudge-l{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-6px)}}
 @keyframes pdk-nudge-r{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(6px)}}
 @media (prefers-reduced-motion:reduce){.pdk-arrow.l,.pdk-arrow.r{animation:none}}
+
+/* TÉLÉPHONE (tactile) : bouton ENTRER toujours visible au centre de chaque porte, sauf Accueil/Info (fermée, avec les sessions) */
+@media (hover:none),(pointer:coarse){
+  .pdk-hot:not(.pdk-hot-home) .pdk-hot-chip{
+    bottom:auto;top:55%;
+    font-size:15px;letter-spacing:.22em;padding:9px 20px;
+    color:#fff;background:rgba(5,7,11,.72);
+    border:1.5px solid rgba(184,244,0,.8);
+    box-shadow:0 0 18px rgba(184,244,0,.4);
+    opacity:1;
+    transform:translate(-50%,-50%);
+    animation:pdk-chip-pulse 2.2s ease-in-out infinite;
+  }
+  .pdk-hot:not(.pdk-hot-home):active .pdk-hot-chip{transform:translate(-50%,-50%) scale(.94);background:rgba(184,244,0,.25)}
+}
+@keyframes pdk-chip-pulse{
+  0%,100%{box-shadow:0 0 14px rgba(184,244,0,.3)}
+  50%{box-shadow:0 0 26px rgba(184,244,0,.75)}
+}
+@media (prefers-reduced-motion:reduce){.pdk-hot .pdk-hot-chip{animation:none !important}}
