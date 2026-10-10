@@ -123,15 +123,15 @@
 .pit-cd b{font-family:'Orbitron',sans-serif;font-weight:900;font-size:36px;line-height:1;color:#fff}
 .pit-cd em{margin-top:4px;font-style:normal;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;color:#d0d6e0}
 
-/* ROUTE (zone libre y ≈ 605 à 780 du panorama) : texte "peint" en perspective sur un voile sombre */
-
-.pit-road-pos{left:1010px;top:575x;width:0;height:0;perspective:620px}
-.pit-road{position:absolute;left:0;bottom:0;width:306px;font-size:15px;transform:translateX(-50%) rotateX(20deg);transform-origin:50% 100%;padding:.5em .8em .3em;color:#fff;border-radius:.3em;background:linear-gradient(180deg,rgba(4,6,10,0),rgba(4,6,10,.62) 18%,rgba(4,6,10,.62) 90%,rgba(4,6,10,.35))}
+/* ROUTE → sessions du week-end posées SUR la porte du garage INFO (rideau : x ≈ 850 à 1172, y ≈ 355 à 545 du panorama)
+   le bas du tableau (top) repose sur le sol de la porte, le centre (left) = centre de la porte */
+.pit-road-pos{left:1010px;top:543px;width:0;height:0;perspective:620px}
+.pit-road{position:absolute;left:0;bottom:0;width:306px;font-size:13px;transform:translateX(-50%) rotateX(20deg);transform-origin:50% 100%;padding:.4em .6em .3em;color:#fff;border-radius:.3em;background:linear-gradient(180deg,rgba(4,6,10,.2),rgba(4,6,10,.62) 18%,rgba(4,6,10,.62) 90%,rgba(4,6,10,.35))}
 .pit-road-title{margin-bottom:.25em;padding-bottom:.45em;text-align:center;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.78em;letter-spacing:.3em;color:#fff;border-bottom:.14em solid rgba(255,255,255,.8)}
-.pit-row{position:relative;display:flex;align-items:center;gap:.8em;padding:.38em .3em .38em 1.2em;border-bottom:.07em solid rgba(255,255,255,.3);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05em;letter-spacing:.05em;text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 6px rgba(0,0,0,.7)}
+.pit-row{position:relative;display:flex;align-items:center;gap:.8em;padding:.28em .3em .28em 1.1em;border-bottom:.07em solid rgba(255,255,255,.3);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05em;letter-spacing:.05em;text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 6px rgba(0,0,0,.7)}
 .pit-k{width:5em;flex-shrink:0;font-family:'Orbitron',sans-serif;font-weight:900;font-size:.82em;letter-spacing:.12em}
 .pit-n{display:none;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;font-size:.95em;color:#f1f1ee}
-.pit-t{margin-left:auto;display:flex;align-items:baseline;gap:.7em;white-space:nowrap}
+.pit-t{margin-left:auto;display:flex;align-items:baseline;gap:.5em;white-space:nowrap}
 .pit-t i{font-style:normal;font-size:.85em;letter-spacing:.06em;color:#b9c0cc}
 .pit-t b{min-width:3.3em;text-align:right;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.35em;letter-spacing:.04em;color:#fff;text-shadow:0 0 4px rgba(0,0,0,.95),0 1px 8px rgba(0,0,0,.8)}
 .pit-row.next{background:linear-gradient(90deg,rgba(184,244,0,.16),rgba(184,244,0,0))}
@@ -139,7 +139,7 @@
 .pit-row.next::before{content:"";position:absolute;left:.2em;width:.5em;height:.5em;border-radius:50%;background:#b8f400;box-shadow:0 0 .7em #b8f400}
 .pit-row.past{opacity:.55}
 
-/* téléphone : version compacte, empilée, placée SOUS le logo F1 TRACKER ; sessions sur la porte INFO */
+/* téléphone : bandeau du ciel compact, placé SOUS le logo F1 TRACKER (le tableau des sessions reste identique, il est dans le décor) */
 @media (max-width:700px){
   .pit-sky-pos{top:100px;max-width:380px}
   .pit-sky{flex-direction:column;gap:5px;padding:6px 12px}
@@ -151,13 +151,6 @@
   .pit-cd span{min-width:50px;padding-bottom:3px;border-bottom-width:2px}
   .pit-cd b{font-size:22px}
   .pit-cd em{font-size:9px;margin-top:2px}
-  .pit-road-pos{top:542px;left:1011px}
-  .pit-road{width:306px;font-size:13px;padding:.4em .6em .3em;transform:translateX(-50%);background:rgba(4,6,10,.5)}
-  .pit-row{padding:.28em .3em .28em 1.1em}
-  .pit-n{display:none}
-  .pit-k{width:5em}
-  .pit-t{gap:.5em}
-  .pit-t b{min-width:3.3em;font-size:1.35em}
 }
 
 /* l'indication en bas est repoussée tout en bas pour ne pas gêner */
