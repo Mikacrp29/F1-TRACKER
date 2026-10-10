@@ -124,7 +124,7 @@
 .pit-cd em{margin-top:4px;font-style:normal;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;color:#d0d6e0}
 
 /* ROUTE (zone libre y ≈ 605 à 780 du panorama) : texte "peint" en perspective sur un voile sombre */
-  .pit-road-pos{top:542px;left:1011px}
+  .pit-road-pos{top:360px;left:1011px}
   .pit-road{width:306px;font-size:13px;padding:.4em .6em .3em;transform:translateX(-50%);background:rgba(4,6,10,.5)}
   .pit-row{padding:.28em .3em .28em 1.1em}
   .pit-n{display:none}
