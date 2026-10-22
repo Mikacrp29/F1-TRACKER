@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { fetchCalendar, fetchDrivers, fetchConstructors, fetchResults } from "./api";
 import Intro from "./Intro";
+import Videos from "./Videos";
 import { supportsPaddock, PaddockBoundary } from "./paddock/support";
 
 // la 3D est chargée à part (lazy) : elle n'alourdit pas le démarrage
@@ -225,7 +226,7 @@ function SBadge({st}){
 }
 
 // ═══ PAGE ACCUEIL ═════════════════════════════════════════════════
-function Home({fav,setFav}){
+function Home({fav,setFav,onVideos}){
   const gp=nxtGP(),ns=nxtSess(gp),ord=sessOrd(gp),st=gpSt(gp);
   const done=CAL.filter(g=>gpSt(g)==="finished").length;
   const lead=DRIVERS[0], second=DRIVERS[1];
@@ -250,6 +251,9 @@ function Home({fav,setFav}){
       <div className="card" style={{padding:"5px 3px"}}>
         {ord.map(k=><SRow key={k} k={k} time={gp.sessions[k]} isNext={ns?.k===k}/>)}
       </div>
+      <button onClick={onVideos} style={{marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span>🎬 NOS VIDÉOS</span><span style={{color:"var(--red)"}}>›</span>
+      </button>
     </div>
     <div style={{marginBottom:14}}>
       <div className="ptitle">Saison {new Date().getFullYear()}</div>
@@ -645,11 +649,12 @@ const finishIntro=()=>{
   const content=(<>
     {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
     {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
-    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav}/>}
+    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={()=>setPage("videos")}/>}
     {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
     {ready&&page==="standings"&&<Standings/>}
     {ready&&page==="results"  &&<Results/>}
     {ready&&page==="alerts"   &&<Alerts/>}
+    {page==="videos"&&<Videos onBack={()=>go("home")}/>}
     {ready&&page==="detail"&&selGP&&<Detail gp={selGP} onBack={()=>go("calendar")}/>}
   </>);
 
