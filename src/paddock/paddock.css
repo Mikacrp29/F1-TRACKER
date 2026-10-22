@@ -57,7 +57,7 @@
 .pdk-screen.pdk-red{--glow:rgba(255,59,48,.1)} /* alerte active : lueur rouge */
 
 .pdk-bar{flex:0 0 28px;display:flex;align-items:center;gap:9px;padding:0 14px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.58rem;letter-spacing:.24em;color:var(--w);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.25));border-bottom:1px solid rgba(255,255,255,.08)}
-.pdk-bar::after{content:"F1 TRACKER";margin-left:auto;font-size:.48rem;letter-spacing:.22em;color:var(--g2)}
+.pdk-bar::after{content:"FORMULA DESK";margin-left:auto;font-size:.48rem;letter-spacing:.22em;color:var(--g2)}
 .pdk-led{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.8s infinite}
 .pdk-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#2a2e36 transparent;touch-action:pan-y}
 .pdk-body .inner{max-width:none;padding:16px 16px 12px}
@@ -139,7 +139,7 @@
 .pit-row.next::before{content:"";position:absolute;left:.2em;width:.5em;height:.5em;border-radius:50%;background:#b8f400;box-shadow:0 0 .7em #b8f400}
 .pit-row.past{opacity:.55}
 
-/* téléphone : bandeau du ciel compact, placé SOUS le logo F1 TRACKER (le tableau des sessions reste identique, il est dans le décor) */
+/* téléphone : bandeau du ciel compact, placé SOUS le logo FORMULA DESK (le tableau des sessions reste identique, il est dans le décor) */
 @media (max-width:700px){
   .pit-sky-pos{top:100px;max-width:380px}
   .pit-sky{flex-direction:column;gap:5px;padding:6px 12px}

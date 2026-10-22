@@ -435,7 +435,7 @@ function Alerts(){
   const activate=async()=>{
     if(!("Notification" in window)){alert("Non supporté.");return;}
     const p=await Notification.requestPermission();
-    if(p==="granted"){setPush(true);new Notification("F1 Tracker 🏁",{body:`Alertes activées ! Prochain GP : ${gp.name}, ${fmtFull(gp.sessions.race)}.`});}
+    if(p==="granted"){setPush(true);new Notification("Formula DESK 🏁",{body:`Alertes activées ! Prochain GP : ${gp.name}, ${fmtFull(gp.sessions.race)}.`});}
     else alert("Permission refusée — activez les notifications dans les réglages du navigateur.");
   };
   return(<div className="fade">
@@ -665,7 +665,7 @@ const finishIntro=()=>{
     ):(
       <div className="app">
         <header className="hdr">
-          <div className="logo"><div className="dot"/><span className="logo-r">F1</span><span>TRACKER</span></div>
+          <div className="logo"><div className="dot"/><span className="logo-r">FORMULA</span><span>DESK</span></div>
           <span className="b26">{statusLabel}</span>
         </header>
         <div className="scroll">

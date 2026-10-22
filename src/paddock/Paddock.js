@@ -416,10 +416,10 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       {showHud && (
         <>
           <div className="pdk-hud">
-            <button type="button" className={`pdk-brand${inGarage ? " back" : ""}`} onPointerDown={stop} onClick={inGarage ? leave : undefined} aria-label={inGarage ? "Retour au paddock" : "F1 Tracker"}>
+            <button type="button" className={`pdk-brand${inGarage ? " back" : ""}`} onPointerDown={stop} onClick={inGarage ? leave : undefined} aria-label={inGarage ? "Retour au paddock" : "Formula DESK"}>
               {inGarage ? <span className="pdk-back">‹ PADDOCK</span> : <span className="pdk-dot" />}
               <span>
-                F1 <b>TRACKER</b>
+                FORMULA <b>DESK</b>
               </span>
             </button>
             <span className="pdk-status">{statusLabel}</span>
