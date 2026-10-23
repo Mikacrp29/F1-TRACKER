@@ -150,6 +150,7 @@ body{font-family:'Rajdhani',sans-serif;color:var(--w);-webkit-font-smoothing:ant
 .favstar{cursor:pointer;font-size:.9rem;transition:transform .12s}.favstar:active{transform:scale(1.3)}
 .empty{text-align:center;padding:36px 18px;color:var(--g)}.eico{font-size:2rem;margin-bottom:7px}
 .ibox{font-size:.72rem;color:var(--g);background:rgba(255,202,40,.06);border:1px solid rgba(255,202,40,.16);border-radius:8px;padding:8px 11px;margin-bottom:11px}
+.vid-overlay{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 .note{text-align:center;font-size:.62rem;color:var(--g2);padding:6px 0 2px}
 .fade{animation:fi .25s ease forwards}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -251,9 +252,11 @@ function Home({fav,setFav,onVideos}){
       <div className="card" style={{padding:"5px 3px"}}>
         {ord.map(k=><SRow key={k} k={k} time={gp.sessions[k]} isNext={ns?.k===k}/>)}
       </div>
+      {onVideos&&(
       <button onClick={onVideos} style={{marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <span>🎬 NOS VIDÉOS</span><span style={{color:"var(--red)"}}>›</span>
       </button>
+      )}
     </div>
     <div style={{marginBottom:14}}>
       <div className="ptitle">Saison {new Date().getFullYear()}</div>
@@ -571,9 +574,10 @@ function PitSky(){
     </div>
   </div>);
 }
-function PitRoad(){
+function PitRoad({onVideos}){
   const gp=nxtGP(),ns=nxtSess(gp),ord=sessOrd(gp);
-  return(<div className="pit-road">
+  return(<>
+  <div className="pit-road">
     <div className="pit-road-title">SESSIONS DU WEEK-END</div>
     {ord.map(k=>{
       const t=gp.sessions[k];
@@ -585,7 +589,11 @@ function PitRoad(){
         <span className="pit-t"><i>{fmtD(t)}</i><b>{fmtH(t)}</b></span>
       </div>);
     })}
-  </div>);
+  </div>
+  <button type="button" className="pit-vid" onPointerDown={e=>e.stopPropagation()} onClick={onVideos}>
+    <span>🎬 NOS VIDÉOS</span><b>›</b>
+  </button>
+  </>);
 }
 
 // ═══ APP ROOT ══════════════════════════════════════════════════════
@@ -601,6 +609,7 @@ export default function App(){
   const [page,setPage]=useState("home");
   const [selGP,setSelGP]=useState(null);
   const [fav,setFav]=useState(null);
+  const [videosOpen,setVideosOpen]=useState(false);
   const [,setTick]=useState(0);
   const [status,setStatus]=useState("loading");
   const [paddockOn,setPaddockOn]=useState(()=>supportsPaddock());
@@ -649,22 +658,22 @@ const finishIntro=()=>{
   const content=(<>
     {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
     {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
-    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={()=>setPage("videos")}/>}
+    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:()=>setVideosOpen(true)}/>}
     {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
     {ready&&page==="standings"&&<Standings/>}
     {ready&&page==="results"  &&<Results/>}
     {ready&&page==="alerts"   &&<Alerts/>}
-    {page==="videos"&&<Videos onBack={()=>go("home")}/>}
     {ready&&page==="detail"&&selGP&&<Detail gp={selGP} onBack={()=>go("calendar")}/>}
   </>);
 
   return(<>
     <style>{CSS}</style>
     {intro&&<Intro onDone={finishIntro}/>}
+    {videosOpen&&(<div className="vid-overlay"><div className="scroll"><div className="inner"><Videos onBack={()=>setVideosOpen(false)}/></div></div></div>)}
     {paddockOn?(
       <PaddockBoundary onFail={()=>setPaddockOn(false)}>
         <Suspense fallback={null}>
-          <Paddock introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad/>:null}>{content}</Paddock>
+          <Paddock introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad onVideos={()=>setVideosOpen(true)}/>:null}>{content}</Paddock>
         </Suspense>
       </PaddockBoundary>
     ):(

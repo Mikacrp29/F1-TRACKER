@@ -65,7 +65,7 @@ export default function Videos({ onBack }) {
   return (
     <div className="fade">
       <style>{CSS}</style>
-      <button className="back" onClick={onBack}>‹ Accueil</button>
+      <button className="back" onClick={onBack}>‹ Retour</button>
       <div className="ptitle">Vidéos</div>
 
       {error && <div className="empty"><p>Impossible de charger les vidéos.<br />Réessaie dans un instant.</p></div>}

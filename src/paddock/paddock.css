@@ -206,3 +206,8 @@
   50%{box-shadow:0 0 26px rgba(184,244,0,.75)}
 }
 @media (prefers-reduced-motion:reduce){.pdk-hot .pdk-hot-chip{animation:none !important}}
+/* bouton « Nos vidéos » : sur le bitume, juste sous le tableau des sessions */
+.pit-vid{position:absolute;left:0;top:22px;transform:translateX(-50%);width:288px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border:1px solid rgba(255,255,255,.55);border-radius:6px;background:rgba(4,6,10,.72);color:#fff;font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;letter-spacing:.16em;cursor:pointer;pointer-events:auto;text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.pit-vid b{color:#b8f400;font-size:20px;line-height:1}
+.pit-vid:hover,.pit-vid:focus-visible{background:rgba(184,244,0,.14);border-color:#b8f400}
+.pit-road-pos.off .pit-vid{visibility:hidden}
