@@ -29,7 +29,7 @@ function panFor(g, vw, vh) {
 }
 
 // Paddock en photos : panorama + 5 garages, caméra animée. Les pages réelles de l'app s'affichent sur l'écran du garage.
-export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel, sky, road }) {
+export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel, sky, road, wallpaper }) {
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [phase, setPhase] = useState("pano"); // pano | pre | entering | garage | screen | leaving1 | leaving2
   const [cur, setCur] = useState(null);
@@ -135,6 +135,12 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
         vel.current *= Math.exp(-dt * 3.2);
         if (Math.abs(vel.current) < 0.004 || panTarget.current <= 0 || panTarget.current >= 1) vel.current = 0;
       }
+      // mode fond d'écran : la caméra se balade très lentement autour de la porte INFO (cycle d'environ 2 minutes)
+      if (wallpaper && !reduce) {
+        const { w, h } = vpRef.current;
+        const home = GARAGES.find((x) => x.id === "home");
+        panTarget.current = clamp(panFor(home, w, h) + 0.06 * Math.sin(now / 19000), 0, 1);
+      }
       // suit la cible avec un amorti : serré pendant le glissement, plus doux sinon
       const diff = panTarget.current - panRef.current;
       if (Math.abs(diff) > 0.00002) {
@@ -149,7 +155,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [phase, settled]);
+  }, [phase, settled, wallpaper, reduce]);
 
   /* ── machine d'états de la caméra ── */
   const startLeave = useCallback(() => {
@@ -205,14 +211,14 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
 
   // passe au garage précédent / suivant
   const step = useCallback((dir) => {
-    if (phaseRef.current !== "pano") return;
+    if (wallpaper || phaseRef.current !== "pano") return;
     const { w, h } = vpRef.current;
     const targets = GARAGES.map((g) => panFor(g, w, h));
     let best = 0;
     targets.forEach((t, i) => { if (Math.abs(t - panTarget.current) < Math.abs(targets[best] - panTarget.current)) best = i; });
     vel.current = 0;
     panTarget.current = targets[clamp(best + dir, 0, targets.length - 1)];
-  }, []);
+  }, [wallpaper]);
 
   useEffect(() => {
     const onPop = () => {
@@ -309,7 +315,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   /* ── interactions : glisser (avec élan), molette, flèches ── */
   const onPointerDown = (e) => {
     moved.current = 0;
-    if (phaseRef.current !== "pano" || !canPan || !settled) return;
+    if (wallpaper || phaseRef.current !== "pano" || !canPan || !settled) return;
     dragging.current = true;
     vel.current = 0;
     drag.current = { x: e.clientX, start: panTarget.current, samples: [[performance.now(), panTarget.current]] };
@@ -342,7 +348,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
     dragging.current = false;
   };
   const onWheel = (e) => {
-    if (phaseRef.current !== "pano" || !canPan || !settled) return;
+    if (wallpaper || phaseRef.current !== "pano" || !canPan || !settled) return;
     const dd = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     vel.current = 0;
     panTarget.current = clamp(panTarget.current + (dd * (e.deltaMode === 1 ? 16 : 1)) / (dw - vw), 0, 1);
@@ -356,7 +362,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   return (
     <div
       ref={rootRef}
-      className={`pdk-root${phase !== "pano" ? " still" : ""}`}
+      className={`pdk-root${phase !== "pano" ? " still" : ""}${wallpaper ? " pdk-wall" : ""}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
@@ -369,7 +375,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
           {/* panorama de la voie des stands + zones cliquables */}
           <div ref={layerRef} className="pdk-layer" style={{ width: PW, height: PH, ...panoStyle }}>
             <img src={PANO} width={PW} height={PH} alt="" draggable={false} decoding="async" onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />
-            {GARAGES.map((x) => (
+            {!wallpaper && GARAGES.map((x) => (
               <button
                 key={x.id}
                 type="button"
@@ -413,7 +419,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
         </div>
       )}
 
-      {showHud && (
+      {showHud && !wallpaper && (
         <>
           <div className="pdk-hud">
             <button type="button" className={`pdk-brand${inGarage ? " back" : ""}`} onPointerDown={stop} onClick={inGarage ? leave : undefined} aria-label={inGarage ? "Retour au paddock" : "Formula DESK"}>

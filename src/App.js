@@ -2,7 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from "react";
 import { fetchCalendar, fetchDrivers, fetchConstructors, fetchResults } from "./api";
 import Intro from "./Intro";
 import Videos from "./Videos";
-import { supportsPaddock, PaddockBoundary } from "./paddock/support";
+import { supportsPaddock, isWallpaper, PaddockBoundary } from "./paddock/support";
 
 // la 3D est chargée à part (lazy) : elle n'alourdit pas le démarrage
 const Paddock = lazy(() => import("./paddock/Paddock"));
@@ -590,9 +590,9 @@ function PitRoad({onVideos}){
       </div>);
     })}
   </div>
-  <button type="button" className="pit-vid" onPointerDown={e=>e.stopPropagation()} onClick={onVideos}>
+  {onVideos&&(<button type="button" className="pit-vid" onPointerDown={e=>e.stopPropagation()} onClick={onVideos}>
     <span>🎬 NOS VIDÉOS</span><b>›</b>
-  </button>
+  </button>)}
   </>);
 }
 
@@ -612,8 +612,10 @@ export default function App(){
   const [videosOpen,setVideosOpen]=useState(false);
   const [,setTick]=useState(0);
   const [status,setStatus]=useState("loading");
-  const [paddockOn,setPaddockOn]=useState(()=>supportsPaddock());
+  const wall=isWallpaper(); // mode fond d'écran : adresse du site + ?fond
+  const [paddockOn,setPaddockOn]=useState(()=>supportsPaddock()||isWallpaper());
   const [intro,setIntro]=useState(()=>{
+  if(isWallpaper())return false;
   try{
     if(sessionStorage.getItem("f1intro"))return false;
     if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return false;
@@ -673,7 +675,7 @@ const finishIntro=()=>{
     {paddockOn?(
       <PaddockBoundary onFail={()=>setPaddockOn(false)}>
         <Suspense fallback={null}>
-          <Paddock introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad onVideos={()=>setVideosOpen(true)}/>:null}>{content}</Paddock>
+          <Paddock wallpaper={wall} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad onVideos={wall?null:()=>setVideosOpen(true)}/>:null}>{content}</Paddock>
         </Suspense>
       </PaddockBoundary>
     ):(

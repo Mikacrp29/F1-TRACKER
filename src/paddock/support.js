@@ -9,6 +9,17 @@ export function supportsPaddock() {
   }
 }
 
+// Mode fond d'écran : adresse du site suivie de ?fond (ou ?wallpaper).
+// Pas d'intro, pas de boutons : seulement le décor, le compte à rebours et les sessions, qui bougent très lentement.
+export function isWallpaper() {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    return q.get("fond") !== null || q.get("wallpaper") !== null;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Si le paddock plante (image introuvable...), on retombe sur l'interface classique.
 export class PaddockBoundary extends React.Component {
   constructor(props) {
