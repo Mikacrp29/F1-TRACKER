@@ -36,7 +36,7 @@ const safeLink = (url) => (/^https:\/\/([a-z0-9-]+\.)*(tiktok|instagram)\.com\//
 
 const CSS = `
 .vgrid{display:flex;flex-direction:column;gap:10px}
-.vcard{background:var(--bg3);border:1px solid var(--bd);border-radius:13px;padding:13px 14px}
+.vcard{background:rgba(18,18,22,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:13px;padding:13px 14px}
 .vtop{display:flex;align-items:center;gap:9px}
 .vbadge{font-family:'Orbitron',sans-serif;font-size:.5rem;font-weight:700;letter-spacing:.1em;padding:2px 7px;border-radius:20px;border:1px solid currentColor;flex-shrink:0}
 .vtitle{flex:1;font-weight:700;font-size:.95rem;line-height:1.2}
@@ -65,7 +65,7 @@ export default function Videos({ onBack }) {
   return (
     <div className="fade">
       <style>{CSS}</style>
-      <button className="back" onClick={onBack}>‹ Retour</button>
+      <button className="back" style={{color:"#e4e4ec",textShadow:"0 1px 6px rgba(0,0,0,.8)"}} onClick={onBack}>‹ Retour</button>
       <div className="ptitle">Vidéos</div>
 
       {error && <div className="empty"><p>Impossible de charger les vidéos.<br />Réessaie dans un instant.</p></div>}
@@ -118,7 +118,7 @@ export default function Videos({ onBack }) {
           })}
         </div>
       )}
-      <div className="note">Rien n'est chargé depuis TikTok ou Instagram avant que tu appuies sur « Lire »</div>
+      <div className="note" style={{color:"#b4b4c4",textShadow:"0 1px 6px rgba(0,0,0,.8)"}}>Rien n'est chargé depuis TikTok ou Instagram avant que tu appuies sur « Lire »</div>
     </div>
   );
 }

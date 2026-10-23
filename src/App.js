@@ -150,7 +150,7 @@ body{font-family:'Rajdhani',sans-serif;color:var(--w);-webkit-font-smoothing:ant
 .favstar{cursor:pointer;font-size:.9rem;transition:transform .12s}.favstar:active{transform:scale(1.3)}
 .empty{text-align:center;padding:36px 18px;color:var(--g)}.eico{font-size:2rem;margin-bottom:7px}
 .ibox{font-size:.72rem;color:var(--g);background:rgba(255,202,40,.06);border:1px solid rgba(255,202,40,.16);border-radius:8px;padding:8px 11px;margin-bottom:11px}
-.vid-overlay{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.vid-overlay{position:fixed;inset:0;z-index:200;background:linear-gradient(rgba(9,9,11,.62),rgba(9,9,11,.82)),url(/paddock/videos-fond.webp) center/cover no-repeat,var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 .note{text-align:center;font-size:.62rem;color:var(--g2);padding:6px 0 2px}
 .fade{animation:fi .25s ease forwards}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
