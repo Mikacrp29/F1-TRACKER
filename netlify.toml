@@ -20,23 +20,9 @@
     Cross-Origin-Opener-Policy = "same-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
 
-# ── Cache : fichiers hashés = 1 an, le reste = revalidation ──
+# ── Cache : seuls les fichiers hashés de /static sont gardés 1 an.
+#    Les images (paddock, logos, intro) gardent les noms fixes : Netlify les revalide à chaque visite. ──
 [[headers]]
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/paddock/*"
-  [headers.values]
-    Cache-Control = "public, max-age=604800"
-
-[[headers]]
-  for = "/logos/*"
-  [headers.values]
-    Cache-Control = "public, max-age=604800"
-
-[[headers]]
-  for = "/intro/*"
-  [headers.values]
-    Cache-Control = "public, max-age=604800"
