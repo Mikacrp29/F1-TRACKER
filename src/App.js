@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from "react";
 import { fetchCalendar, fetchDrivers, fetchConstructors, fetchResults } from "./api";
 import Intro from "./Intro";
 import Videos from "./Videos";
+import WallpaperHelp from "./WallpaperHelp";
 import { supportsPaddock, isWallpaper, PaddockBoundary } from "./paddock/support";
 
 // la 3D est chargée à part (lazy) : elle n'alourdit pas le démarrage
@@ -227,7 +228,7 @@ function SBadge({st}){
 }
 
 // ═══ PAGE ACCUEIL ═════════════════════════════════════════════════
-function Home({fav,setFav,onVideos}){
+function Home({fav,setFav,onVideos,onWall}){
   const gp=nxtGP(),ns=nxtSess(gp),ord=sessOrd(gp),st=gpSt(gp);
   const done=CAL.filter(g=>gpSt(g)==="finished").length;
   const lead=DRIVERS[0], second=DRIVERS[1];
@@ -255,6 +256,11 @@ function Home({fav,setFav,onVideos}){
       {onVideos&&(
       <button onClick={onVideos} style={{marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <span>🎬 NOS VIDÉOS</span><span style={{color:"var(--red)"}}>›</span>
+      </button>
+      )}
+      {onWall&&(
+      <button onClick={onWall} style={{marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span>🖥️ FOND D'ÉCRAN LIVE</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
     </div>
@@ -610,6 +616,7 @@ export default function App(){
   const [selGP,setSelGP]=useState(null);
   const [fav,setFav]=useState(null);
   const [videosOpen,setVideosOpen]=useState(false);
+  const [wallHelpOpen,setWallHelpOpen]=useState(false);
   const [,setTick]=useState(0);
   const [status,setStatus]=useState("loading");
   const wall=isWallpaper(); // mode fond d'écran : adresse du site + ?fond
@@ -660,7 +667,7 @@ const finishIntro=()=>{
   const content=(<>
     {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
     {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
-    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:()=>setVideosOpen(true)}/>}
+    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:()=>setVideosOpen(true)} onWall={paddockOn?undefined:()=>setWallHelpOpen(true)}/>}
     {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
     {ready&&page==="standings"&&<Standings/>}
     {ready&&page==="results"  &&<Results/>}
@@ -672,10 +679,11 @@ const finishIntro=()=>{
     <style>{CSS}</style>
     {intro&&<Intro onDone={finishIntro}/>}
     {videosOpen&&(<div className="vid-overlay"><div className="scroll"><div className="inner"><Videos onBack={()=>setVideosOpen(false)}/></div></div></div>)}
+    {wallHelpOpen&&(<div className="vid-overlay"><div className="scroll"><div className="inner"><WallpaperHelp onBack={()=>setWallHelpOpen(false)}/></div></div></div>)}
     {paddockOn?(
       <PaddockBoundary onFail={()=>setPaddockOn(false)}>
         <Suspense fallback={null}>
-          <Paddock wallpaper={wall} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad onVideos={wall?null:()=>setVideosOpen(true)}/>:null}>{content}</Paddock>
+          <Paddock wallpaper={wall} onWallpaper={wall?undefined:()=>setWallHelpOpen(true)} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad onVideos={wall?null:()=>setVideosOpen(true)}/>:null}>{content}</Paddock>
         </Suspense>
       </PaddockBoundary>
     ):(

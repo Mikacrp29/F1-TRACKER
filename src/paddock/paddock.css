@@ -28,7 +28,7 @@
 .pdk-back{font-weight:700;font-size:.62rem;letter-spacing:.18em;color:#b8f400;border:1px solid rgba(184,244,0,.4);border-radius:20px;padding:4px 10px;background:rgba(6,7,10,.6)}
 .pdk-dot{width:7px;height:7px;border-radius:50%;background:#b8f400;box-shadow:0 0 10px #b8f400;animation:pulse 1.6s infinite}
 .pdk-status{font-family:'Orbitron',sans-serif;font-size:.5rem;font-weight:700;letter-spacing:.14em;color:#a8afbb;text-shadow:0 1px 8px rgba(0,0,0,.7)}
-.pdk-hint{position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));text-align:center;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:#c3c9d4;pointer-events:none;z-index:50;text-shadow:0 1px 8px rgba(0,0,0,.8);animation:pdk-hint 9s 1.5s both}
+.pdk-hint{position:absolute;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom));text-align:center;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:#c3c9d4;pointer-events:none;z-index:50;text-shadow:0 1px 8px rgba(0,0,0,.8);animation:pdk-hint 9s 1.5s both}
 @keyframes pdk-hint{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
 .pdk-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:64px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.18);background:rgba(6,7,10,.4);color:#f0f0f4;font-size:1.7rem;line-height:1;border-radius:8px;cursor:pointer;z-index:50;opacity:.7;transition:opacity .15s,border-color .15s}
 .pdk-arrow:hover{opacity:1;border-color:rgba(184,244,0,.6)}
@@ -154,7 +154,7 @@
 }
 
 /* l'indication en bas est repoussée tout en bas pour ne pas gêner */
-.pdk-hint{bottom:calc(6px + env(safe-area-inset-bottom));font-size:.62rem}
+.pdk-hint{bottom:calc(64px + env(safe-area-inset-bottom));font-size:.62rem}
 /* PC (souris) : grand bouton ENTRER au centre de la porte du garage survolé (sauf Accueil, où il y a les sessions) */
 @media (hover:hover) and (pointer:fine){
   .pdk-hot:not(.pdk-hot-home) .pdk-hot-chip{
@@ -215,3 +215,9 @@
 /* mode fond d'écran (?fond) : rien à cliquer, pas de curseur */
 .pdk-wall{cursor:none}
 .pdk-wall .pdk-hot{display:none}
+
+/* bandeau « Fond d'écran live » : tout en bas, centré */
+.pdk-wallbtn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:50;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px;height:40px;border:1px solid rgba(255,255,255,.5);border-radius:8px;background:rgba(4,6,10,.72);color:#fff;font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.pdk-wallbtn b{color:#b8f400;font-size:18px;line-height:1}
+.pdk-wallbtn:hover,.pdk-wallbtn:focus-visible{background:rgba(184,244,0,.14);border-color:#b8f400}
+@media (max-width:600px){.pdk-wallbtn{bottom:calc(12px + env(safe-area-inset-bottom))}}

@@ -29,7 +29,7 @@ function panFor(g, vw, vh) {
 }
 
 // Paddock en photos : panorama + 5 garages, caméra animée. Les pages réelles de l'app s'affichent sur l'écran du garage.
-export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel, sky, road, wallpaper }) {
+export default function Paddock({ children, onNavigate, introDone, alertActive, statusLabel, sky, road, wallpaper, onWallpaper }) {
   const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [phase, setPhase] = useState("pano"); // pano | pre | entering | garage | screen | leaving1 | leaving2
   const [cur, setCur] = useState(null);
@@ -248,6 +248,8 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
   const Sp = Math.max(vw / PW, vh / PH); // échelle "plein écran" du panorama
   const Sg = Math.max(vw / GW, vh / GH); // échelle "plein écran" d'une photo de garage
   const dw = PW * Sp;
+  // bandeau « Fond d'écran » : largeur de l'écran sur téléphone, largeur d'un garage sur ordinateur (300 px minimum)
+  const wallW = vw < 600 ? vw - 24 : Math.max(300, Math.round(375 * Sp));
   const canPan = dw - vw > 24;
   const portrait = vw / vh < 0.9;
   const g = GARAGES.find((x) => x.id === cur) || null;
@@ -437,6 +439,11 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
             </>
           )}
           {phase === "pano" && <div className="pdk-hint">{canPan ? "Glissez pour parcourir · touchez un garage" : "Touchez un garage"}</div>}
+          {phase === "pano" && onWallpaper && (
+            <button type="button" className="pdk-wallbtn" style={{ width: wallW }} onPointerDown={stop} onClick={onWallpaper}>
+              <span>🖥️ FOND D'ÉCRAN LIVE</span><b>›</b>
+            </button>
+          )}
         </>
       )}
     </div>
