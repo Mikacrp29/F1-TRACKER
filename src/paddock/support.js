@@ -20,6 +20,15 @@ export function isWallpaper() {
   }
 }
 
+// Adresse directe de la page « Widget iPhone » : <site>/widget (Netlify renvoie l'application pour cette adresse).
+export function isWidgetPath() {
+  try {
+    return /^\/widget\/?$/.test(window.location.pathname);
+  } catch (e) {
+    return false;
+  }
+}
+
 // Si le paddock plante (image introuvable...), on retombe sur l'interface classique.
 export class PaddockBoundary extends React.Component {
   constructor(props) {

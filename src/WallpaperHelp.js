@@ -48,6 +48,9 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.wh-step{animation:none;opacity:1;transition:none}}
 `;
 
+// styles partagés avec la page « Widget iPhone » (WidgetHelp.js)
+export const WH_CSS = CSS;
+
 const isMac = () => {
   try { return /Macintosh/i.test(navigator.userAgent || ""); } catch (e) { return false; }
 };

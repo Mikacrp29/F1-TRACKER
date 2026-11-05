@@ -3,7 +3,8 @@ import { fetchCalendar, fetchDrivers, fetchConstructors, fetchResults } from "./
 import Intro from "./Intro";
 import Videos from "./Videos";
 import WallpaperHelp from "./WallpaperHelp";
-import { supportsPaddock, isWallpaper, PaddockBoundary } from "./paddock/support";
+import WidgetHelp from "./WidgetHelp";
+import { supportsPaddock, isWallpaper, isWidgetPath, PaddockBoundary } from "./paddock/support";
 
 // la 3D est chargée à part (lazy) : elle n'alourdit pas le démarrage
 const Paddock = lazy(() => import("./paddock/Paddock"));
@@ -228,7 +229,9 @@ function SBadge({st}){
 }
 
 // ═══ PAGE ACCUEIL ═════════════════════════════════════════════════
-function Home({fav,setFav,onVideos,onWall}){
+// les trois boutons de la page d'accueil (Nos vidéos / Fond d'écran live / Widget iPhone) ont exactement le même format
+const LNK={marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"};
+function Home({fav,setFav,onVideos,onWall,onWidget}){
   const gp=nxtGP(),ns=nxtSess(gp),ord=sessOrd(gp),st=gpSt(gp);
   const done=CAL.filter(g=>gpSt(g)==="finished").length;
   const lead=DRIVERS[0], second=DRIVERS[1];
@@ -254,13 +257,18 @@ function Home({fav,setFav,onVideos,onWall}){
         {ord.map(k=><SRow key={k} k={k} time={gp.sessions[k]} isNext={ns?.k===k}/>)}
       </div>
       {onVideos&&(
-      <button onClick={onVideos} style={{marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <button onClick={onVideos} style={LNK}>
         <span>🎬 NOS VIDÉOS</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
       {onWall&&(
-      <button onClick={onWall} style={{marginTop:10,width:"100%",background:"var(--bg3)",border:"1px solid var(--bd)",borderRadius:13,color:"var(--w)",fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".72rem",letterSpacing:".08em",padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <button onClick={onWall} style={LNK}>
         <span>🖥️ FOND D'ÉCRAN LIVE</span><span style={{color:"var(--red)"}}>›</span>
+      </button>
+      )}
+      {onWidget&&(
+      <button onClick={onWidget} style={LNK}>
+        <span>📱 WIDGET IPHONE</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
     </div>
@@ -580,10 +588,11 @@ function PitSky(){
     </div>
   </div>);
 }
-function PitRoad({onVideos}){
-  const gp=nxtGP(),ns=nxtSess(gp),ord=sessOrd(gp);
+function PitRoad({ready,onVideos,onWall,onWidget}){
+  const gp=ready?nxtGP():null,ns=gp?nxtSess(gp):null,ord=gp?sessOrd(gp):[];
+  const stop=e=>e.stopPropagation();
   return(<>
-  <div className="pit-road">
+  {gp&&(<div className="pit-road">
     <div className="pit-road-title">SESSIONS DU WEEK-END</div>
     {ord.map(k=>{
       const t=gp.sessions[k];
@@ -595,10 +604,13 @@ function PitRoad({onVideos}){
         <span className="pit-t"><i>{fmtD(t)}</i><b>{fmtH(t)}</b></span>
       </div>);
     })}
-  </div>
-  {onVideos&&(<button type="button" className="pit-vid" onPointerDown={e=>e.stopPropagation()} onClick={onVideos}>
-    <span>🎬 NOS VIDÉOS</span><b>›</b>
-  </button>)}
+  </div>)}
+  {/* les trois liens, l'un sous l'autre, exactement au même format */}
+  {(onVideos||onWall||onWidget)&&(<div className="pit-links">
+    {onVideos&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onVideos}><span>🎬 NOS VIDÉOS</span><b>›</b></button>)}
+    {onWall&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWall}><span>🖥️ FOND D'ÉCRAN LIVE</span><b>›</b></button>)}
+    {onWidget&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWidget}><span>📱 WIDGET IPHONE</span><b>›</b></button>)}
+  </div>)}
   </>);
 }
 
@@ -617,12 +629,17 @@ export default function App(){
   const [fav,setFav]=useState(null);
   const [videosOpen,setVideosOpen]=useState(false);
   const [wallHelpOpen,setWallHelpOpen]=useState(false);
+  const [widgetHelpOpen,setWidgetHelpOpen]=useState(()=>isWidgetPath()); // adresse directe : <site>/widget
+  const closeWidgetHelp=()=>{
+    setWidgetHelpOpen(false);
+    try{if(isWidgetPath())window.history.replaceState(null,"","/");}catch(e){}
+  };
   const [,setTick]=useState(0);
   const [status,setStatus]=useState("loading");
   const wall=isWallpaper(); // mode fond d'écran : adresse du site + ?fond
   const [paddockOn,setPaddockOn]=useState(()=>supportsPaddock()||isWallpaper());
   const [intro,setIntro]=useState(()=>{
-  if(isWallpaper())return false;
+  if(isWallpaper()||isWidgetPath())return false;
   try{
     if(sessionStorage.getItem("f1intro"))return false;
     if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return false;
@@ -667,7 +684,7 @@ const finishIntro=()=>{
   const content=(<>
     {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
     {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
-    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:()=>setVideosOpen(true)} onWall={paddockOn?undefined:()=>setWallHelpOpen(true)}/>}
+    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:()=>setVideosOpen(true)} onWall={paddockOn?undefined:()=>setWallHelpOpen(true)} onWidget={paddockOn?undefined:()=>setWidgetHelpOpen(true)}/>}
     {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
     {ready&&page==="standings"&&<Standings/>}
     {ready&&page==="results"  &&<Results/>}
@@ -680,10 +697,11 @@ const finishIntro=()=>{
     {intro&&<Intro onDone={finishIntro}/>}
     {videosOpen&&(<div className="vid-overlay"><div className="scroll"><div className="inner"><Videos onBack={()=>setVideosOpen(false)}/></div></div></div>)}
     {wallHelpOpen&&(<div className="vid-overlay"><div className="scroll"><div className="inner"><WallpaperHelp onBack={()=>setWallHelpOpen(false)}/></div></div></div>)}
+    {widgetHelpOpen&&(<div className="vid-overlay"><div className="scroll"><div className="inner"><WidgetHelp onBack={closeWidgetHelp}/></div></div></div>)}
     {paddockOn?(
       <PaddockBoundary onFail={()=>setPaddockOn(false)}>
         <Suspense fallback={null}>
-          <Paddock wallpaper={wall} onWallpaper={wall?undefined:()=>setWallHelpOpen(true)} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={ready?<PitRoad onVideos={wall?null:()=>setVideosOpen(true)}/>:null}>{content}</Paddock>
+          <Paddock wallpaper={wall} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={<PitRoad ready={ready} onVideos={wall?null:()=>setVideosOpen(true)} onWall={wall?null:()=>setWallHelpOpen(true)} onWidget={wall?null:()=>setWidgetHelpOpen(true)}/>}>{content}</Paddock>
         </Suspense>
       </PaddockBoundary>
     ):(

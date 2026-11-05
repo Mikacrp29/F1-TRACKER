@@ -1,0 +1,122 @@
+import React, { useEffect, useRef, useState } from "react";
+import { WH_CSS } from "./WallpaperHelp";
+
+// ─────────────────────────────────────────────────────────────────────
+// PAGE « WIDGET IPHONE » : explique comment afficher le prochain Grand Prix (compte à rebours + sessions)
+// sur l'écran d'accueil de l'iPhone, avec l'appli gratuite Scriptable.
+// Le script du widget est hébergé sur ce site : /public/widget/F1-Widget.js
+// → le modifier sur GitHub met à jour tous les widgets déjà installés.
+// Adresse directe à partager : <site>/widget
+// ─────────────────────────────────────────────────────────────────────
+
+const SCRIPTABLE = "https://apps.apple.com/app/scriptable/id1405459188";
+
+const STEPS = [
+  { t: "Installe Scriptable", d: "Une appli gratuite de l'App Store, qui sert à afficher le widget.", link: [SCRIPTABLE, "Scriptable sur l'App Store"] },
+  { t: "Crée un nouveau script", d: "Ouvre Scriptable et appuie sur « + » en haut à droite." },
+  { t: "Colle le code", d: "Colle le code copié ci-dessus, puis appuie sur ▶ en bas à droite pour voir l'aperçu. Appuie ensuite sur « Done » pour revenir à la liste. Tu peux nommer le script (par exemple « F1 »)." },
+  { t: "Ajoute le widget à l'écran d'accueil", d: "Appuie longuement sur un espace vide de l'écran d'accueil, puis sur « + ». Cherche « Scriptable », choisis la taille Moyenne (ou Petite) et appuie sur « Ajouter le widget »." },
+  { t: "Choisis ton script", d: "Appuie sur le widget qui vient d'apparaître (l'écran d'accueil est encore en mode édition), choisis « Script » puis ton script. Valide : le widget s'affiche." },
+];
+
+const CSS = `
+.wd-code{display:block;width:100%;box-sizing:border-box;resize:none;white-space:pre;overflow-x:auto;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#d9ffa6;font:600 .7rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:10px}
+.wd-copy{width:100%;margin-top:9px;padding:11px 14px;font-size:.92rem}
+.wd-warn{background:rgba(255,202,40,.08);border:1px solid rgba(255,202,40,.28);border-radius:11px;padding:10px 12px;margin-bottom:12px;font-size:.84rem;line-height:1.35;color:#f1e3b0}
+`;
+
+const isIOS = () => {
+  try {
+    const ua = navigator.userAgent || "";
+    return /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  } catch (e) {
+    return false;
+  }
+};
+
+export default function WidgetHelp({ onBack }) {
+  const base = window.location.origin;
+  const scriptUrl = `${base}/widget/F1-Widget.js`;
+  const pageUrl = `${base}/widget`;
+  // chargeur : le widget lui-même est téléchargé depuis le site à chaque affichage
+  const code = [
+    `const url = "${scriptUrl}";`,
+    "const code = await new Request(url).loadString();",
+    'await new Function("return (async () => {" + code + "\\n})()")();',
+  ].join("\n");
+
+  const [active, setActive] = useState(0);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [ios] = useState(isIOS);
+  const codeRef = useRef(null);
+  const linkRef = useRef(null);
+
+  // mise en avant des étapes, l'une après l'autre
+  useEffect(() => {
+    let reduce = false;
+    try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    if (reduce) return undefined;
+    const id = setInterval(() => setActive((a) => (a + 1) % STEPS.length), 2600);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onBack(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onBack]);
+
+  const copy = async (text, ref, setFlag) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      try { ref.current.select(); document.execCommand("copy"); } catch (e2) { return; }
+    }
+    setFlag(true);
+    setTimeout(() => setFlag(false), 2200);
+  };
+
+  return (
+    <div className="fade wh-wrap">
+      <style>{WH_CSS}{CSS}</style>
+      <button className="back" style={{ color: "#e4e4ec", textShadow: "0 1px 6px rgba(0,0,0,.8)" }} onClick={onBack}>‹ Retour</button>
+      <div className="ptitle">Widget iPhone</div>
+      <p className="wh-lead">Affiche le prochain Grand Prix, son compte à rebours et le programme du week-end directement sur l'écran d'accueil de ton iPhone. C'est gratuit et ça prend environ 3 minutes, avec l'appli <b>Scriptable</b>.</p>
+
+      {!ios && (
+        <div className="wd-warn">Ce widget est prévu pour <b>iPhone</b> (et iPad). Copie le lien de cette page tout en bas pour l'ouvrir sur ton iPhone.</div>
+      )}
+
+      <div className="wh-card">
+        <div className="wh-lbl">CODE À COLLER (ÉTAPE 3)</div>
+        <textarea ref={codeRef} className="wd-code" readOnly rows={4} wrap="off" value={code} onFocus={(e) => e.target.select()} aria-label="Code du widget" />
+        <button className="wh-btn wd-copy" onClick={() => copy(code, codeRef, setCopiedCode)}>{copiedCode ? "Copié ✓" : "Copier le code"}</button>
+      </div>
+
+      {STEPS.map((s, i) => (
+        <div key={i} className={`wh-step${active === i ? " on" : ""}`} style={{ animationDelay: `${i * 0.14}s` }}>
+          <div className="wh-n">{i + 1}</div>
+          <div>
+            <div className="wh-t">{s.t}</div>
+            <div className="wh-d">
+              {s.d}
+              {s.link && <> <a href={s.link[0]} target="_blank" rel="noopener noreferrer">{s.link[1]} ↗</a></>}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <p className="wh-note"><b>Bon à savoir :</b> une connexion internet est nécessaire. iOS décide quand le widget se rafraîchit (en général toutes les 15 minutes ou plus). Le compte à rebours affiche les jours, heures et minutes, puis tourne en direct à moins de 24 h de la session. Toucher le widget ouvre le site.</p>
+      <p className="wh-note"><b>Mises à jour automatiques :</b> le code ci-dessus charge le widget depuis ce site. Quand il est amélioré, ton widget se met à jour tout seul, sans rien refaire. Ne colle que le code de cette page.</p>
+
+      <div className="wh-card" style={{ marginTop: 14 }}>
+        <div className="wh-lbl">PARTAGE CETTE PAGE</div>
+        <div className="wh-link">
+          <input ref={linkRef} readOnly value={pageUrl} onFocus={(e) => e.target.select()} aria-label="Lien de la page widget" />
+          <button className="wh-btn" onClick={() => copy(pageUrl, linkRef, setCopiedLink)}>{copiedLink ? "Copié ✓" : "Copier"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
