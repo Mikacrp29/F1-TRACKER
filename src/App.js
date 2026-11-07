@@ -275,6 +275,7 @@ function Home({fav,setFav,onVideos,onWall,onWidget}){
         <span>📱 WIDGET IPHONE</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
+      <a href="/legal.html" target="_blank" rel="noopener" style={{display:"block",textAlign:"center",marginTop:12,fontSize:".68rem",color:"#8a8a95",textDecoration:"underline"}}>Mentions légales &amp; confidentialité</a>
     </div>
     <div style={{marginBottom:14}}>
       <div className="ptitle">Saison {new Date().getFullYear()}</div>
@@ -614,6 +615,7 @@ function PitRoad({ready,onVideos,onWall,onWidget}){
     {onVideos&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onVideos}><span>🎬 NOS VIDÉOS</span><b>›</b></button>)}
     {onWall&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWall}><span>🖥️ FOND D'ÉCRAN LIVE</span><b>›</b></button>)}
     {onWidget&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWidget}><span>📱 WIDGET IPHONE</span><b>›</b></button>)}
+    <a href="/legal.html" target="_blank" rel="noopener" onPointerDown={stop} style={{textAlign:"center",fontSize:".66rem",color:"rgba(255,255,255,.6)",textDecoration:"underline",textShadow:"0 1px 4px rgba(0,0,0,.9)"}}>Mentions légales &amp; confidentialité</a>
   </div>)}
   </>);
 }
