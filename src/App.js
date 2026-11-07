@@ -6,6 +6,10 @@ import WallpaperHelp from "./WallpaperHelp";
 import WidgetHelp from "./WidgetHelp";
 import { supportsPaddock, isWallpaper, isWidgetPath, PaddockBoundary } from "./paddock/support";
 
+// « Nos vidéos » ouvre directement ton compte TikTok (plus de liste à tenir à jour)
+const TIKTOK_URL = "https://www.tiktok.com/@formuladesk";
+const openTikTok = () => { window.open(TIKTOK_URL, "_blank", "noopener,noreferrer"); };
+
 // la 3D est chargée à part (lazy) : elle n'alourdit pas le démarrage
 const Paddock = lazy(() => import("./paddock/Paddock"));
 
@@ -684,7 +688,7 @@ const finishIntro=()=>{
   const content=(<>
     {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
     {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
-    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:()=>setVideosOpen(true)} onWall={paddockOn?undefined:()=>setWallHelpOpen(true)} onWidget={paddockOn?undefined:()=>setWidgetHelpOpen(true)}/>}
+    {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:openTikTok} onWall={paddockOn?undefined:()=>setWallHelpOpen(true)} onWidget={paddockOn?undefined:()=>setWidgetHelpOpen(true)}/>}
     {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
     {ready&&page==="standings"&&<Standings/>}
     {ready&&page==="results"  &&<Results/>}
@@ -701,7 +705,7 @@ const finishIntro=()=>{
     {paddockOn?(
       <PaddockBoundary onFail={()=>setPaddockOn(false)}>
         <Suspense fallback={null}>
-          <Paddock wallpaper={wall} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={<PitRoad ready={ready} onVideos={wall?null:()=>setVideosOpen(true)} onWall={wall?null:()=>setWallHelpOpen(true)} onWidget={wall?null:()=>setWidgetHelpOpen(true)}/>}>{content}</Paddock>
+          <Paddock wallpaper={wall} introDone={!intro} onNavigate={go} alertActive={alertActive} statusLabel={statusLabel} sky={ready?<PitSky/>:null} road={<PitRoad ready={ready} onVideos={wall?null:openTikTok} onWall={wall?null:()=>setWallHelpOpen(true)} onWidget={wall?null:()=>setWidgetHelpOpen(true)}/>}>{content}</Paddock>
         </Suspense>
       </PaddockBoundary>
     ):(
