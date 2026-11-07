@@ -3,9 +3,9 @@
 // Données : API Jolpica-F1.
 
 // ---------- Réglages ----------
-const SITE_URL = "https://f1-call.netlify.app";
+const SITE_URL = "https://formuladesk.fr";
 // Image de fond (ex: ton panorama du paddock). Laisser vide = dégradé bleu nuit.
-const BG_URL = "https://f1-call.netlify.app/paddock/panorama.webp";
+const BG_URL = "https://formuladesk.fr/paddock/panorama.webp";
 const BG_FOCUS_X = 0.5; // partie du panorama affichée : 0 = gauche, 0.5 = centre, 1 = droite
 const FONT_TITLE = "Futura-Bold"; // police intégrée à iOS (les polices du site ne peuvent pas être chargées)
 const FONT_TEXT = "Futura-Medium";
