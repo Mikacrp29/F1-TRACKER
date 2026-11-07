@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Ajoutez la ligne suivante une fois le nom de domaine définitif :
-# Sitemap: https://VOTRE-DOMAINE/sitemap.xml
+Sitemap: https://formuladesk.fr/sitemap.xml
