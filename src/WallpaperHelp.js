@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { T, useLang } from "./i18n";
 
 // ─────────────────────────────────────────────────────────────────────
 // TUTO « FOND D'ÉCRAN LIVE » : explique comment afficher le site (mode ?fond) en fond d'écran, sur PC et sur Mac.
@@ -8,20 +9,17 @@ import React, { useEffect, useRef, useState } from "react";
 const LIVELY = "https://github.com/rocksdanister/lively";
 const PLASH = "https://sindresorhus.com/plash";
 
-const STEPS = {
-  windows: [
-    { t: "Installe Lively Wallpaper", d: "Gratuit, sur le Microsoft Store (cherche « Lively Wallpaper ») ou sur sa page officielle.", link: [LIVELY, "Page officielle de Lively"] },
-    { t: "Ouvre Lively et clique sur « + »", d: "Le bouton « + » se trouve en haut de la fenêtre de Lively." },
-    { t: "Colle le lien et valide", d: "Colle le lien ci-dessus dans le champ prévu, puis clique sur OK." },
-    { t: "Définis-le comme fond d'écran", d: "Clique sur la vignette qui vient d'apparaître dans ta bibliothèque, ou fais un clic droit puis « Set as wallpaper »." },
-  ],
-  mac: [
-    { t: "Installe Plash", d: "Gratuit, sur le Mac App Store. Vérifie sur sa page qu'il est compatible avec ta version de macOS.", link: [PLASH, "Page officielle de Plash"] },
-    { t: "Ouvre Plash", d: "Une petite icône apparaît dans la barre de menus, en haut de l'écran. Clique dessus pour ouvrir son menu." },
-    { t: "Ajoute un site web", d: "Dans le menu de l'icône, choisis l'option pour ajouter un site web (« Add Website… »). Les libellés peuvent varier selon la version." },
-    { t: "Colle le lien et valide", d: "Colle le lien ci-dessus, puis valide : la page s'affiche alors sur ton bureau." },
-  ],
-};
+const steps = (os) => (os === "mac" ? [
+  { t: T("Installe Plash", "Install Plash"), d: T("Gratuit, sur le Mac App Store. Vérifie sur sa page qu'il est compatible avec ta version de macOS.", "Free, on the Mac App Store. Check on its page that it supports your macOS version."), link: [PLASH, T("Page officielle de Plash", "Plash official page")] },
+  { t: T("Ouvre Plash", "Open Plash"), d: T("Une petite icône apparaît dans la barre de menus, en haut de l'écran. Clique dessus pour ouvrir son menu.", "A small icon appears in the menu bar at the top of the screen. Click it to open its menu.") },
+  { t: T("Ajoute un site web", "Add a website"), d: T("Dans le menu de l'icône, choisis l'option pour ajouter un site web (« Add Website… »). Les libellés peuvent varier selon la version.", "In the icon's menu, choose the option to add a website (“Add Website…”). Labels may vary depending on the version.") },
+  { t: T("Colle le lien et valide", "Paste the link and confirm"), d: T("Colle le lien ci-dessus, puis valide : la page s'affiche alors sur ton bureau.", "Paste the link above, then confirm: the page now shows on your desktop.") },
+] : [
+  { t: T("Installe Lively Wallpaper", "Install Lively Wallpaper"), d: T("Gratuit, sur le Microsoft Store (cherche « Lively Wallpaper ») ou sur sa page officielle.", "Free, on the Microsoft Store (search “Lively Wallpaper”) or on its official page."), link: [LIVELY, T("Page officielle de Lively", "Lively official page")] },
+  { t: T("Ouvre Lively et clique sur « + »", "Open Lively and click “+”"), d: T("Le bouton « + » se trouve en haut de la fenêtre de Lively.", "The “+” button is at the top of the Lively window.") },
+  { t: T("Colle le lien et valide", "Paste the link and confirm"), d: T("Colle le lien ci-dessus dans le champ prévu, puis clique sur OK.", "Paste the link above in the field provided, then click OK.") },
+  { t: T("Définis-le comme fond d'écran", "Set it as your wallpaper"), d: T("Clique sur la vignette qui vient d'apparaître dans ta bibliothèque, ou fais un clic droit puis « Set as wallpaper ».", "Click the thumbnail that just appeared in your library, or right-click and choose “Set as wallpaper”.") },
+]);
 
 const CSS = `
 .wh-wrap{padding-bottom:28px}
@@ -56,6 +54,7 @@ const isMac = () => {
 };
 
 export default function WallpaperHelp({ onBack }) {
+  useLang();
   const url = `${window.location.origin}/?fond`;
   const [os, setOs] = useState(() => (isMac() ? "mac" : "windows"));
   const [active, setActive] = useState(0);
@@ -78,7 +77,7 @@ export default function WallpaperHelp({ onBack }) {
     try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
     if (reduce) return undefined;
     setActive(0);
-    const id = setInterval(() => setActive((a) => (a + 1) % STEPS[os].length), 2400);
+    const id = setInterval(() => setActive((a) => (a + 1) % 4), 2400);
     return () => clearInterval(id);
   }, [os]);
 
@@ -101,19 +100,19 @@ export default function WallpaperHelp({ onBack }) {
   return (
     <div className="fade wh-wrap">
       <style>{CSS}</style>
-      <button className="back" style={{ color: "#e4e4ec", textShadow: "0 1px 6px rgba(0,0,0,.8)" }} onClick={onBack}>‹ Retour</button>
-      <div className="ptitle">Fond d'écran live</div>
-      <p className="wh-lead">Affiche le compte à rebours et les sessions de la semaine directement sur ton bureau, mis à jour en direct. Le tuto se fait sur ton <b>ordinateur</b> : copie le lien ci-dessous et ouvre-le là-bas.</p>
+      <button className="back" style={{ color: "#e4e4ec", textShadow: "0 1px 6px rgba(0,0,0,.8)" }} onClick={onBack}>{T("‹ Retour", "‹ Back")}</button>
+      <div className="ptitle">{T("Fond d'écran live", "Live wallpaper")}</div>
+      <p className="wh-lead">{T(<>Affiche le compte à rebours et les sessions de la semaine directement sur ton bureau, mis à jour en direct. Le tuto se fait sur ton <b>ordinateur</b> : copie le lien ci-dessous et ouvre-le là-bas.</>, <>Show the countdown and this week's sessions right on your desktop, updated live. The tutorial is done on your <b>computer</b>: copy the link below and open it there.</>)}</p>
 
       {hasVideo && (
         <video className="wh-video" src="/tuto-fond-ecran.mp4" controls playsInline preload="metadata" />
       )}
 
       <div className="wh-card">
-        <div className="wh-lbl">TON LIEN FOND D'ÉCRAN</div>
+        <div className="wh-lbl">{T("TON LIEN FOND D'ÉCRAN", "YOUR WALLPAPER LINK")}</div>
         <div className="wh-link">
-          <input ref={inputRef} readOnly value={url} onFocus={(e) => e.target.select()} aria-label="Lien du fond d'écran" />
-          <button className="wh-btn" onClick={copy}>{copied ? "Copié ✓" : "Copier"}</button>
+          <input ref={inputRef} readOnly value={url} onFocus={(e) => e.target.select()} aria-label={T("Lien du fond d'écran", "Wallpaper link")} />
+          <button className="wh-btn" onClick={copy}>{copied ? T("Copié ✓", "Copied ✓") : T("Copier", "Copy")}</button>
         </div>
       </div>
 
@@ -122,7 +121,7 @@ export default function WallpaperHelp({ onBack }) {
         <button role="tab" aria-selected={os === "mac"} className={`wh-tab${os === "mac" ? " on" : ""}`} onClick={() => setOs("mac")}>MAC</button>
       </div>
 
-      {STEPS[os].map((s, i) => (
+      {steps(os).map((s, i) => (
         <div key={`${os}-${i}`} className={`wh-step${active === i ? " on" : ""}`} style={{ animationDelay: `${i * 0.14}s` }}>
           <div className="wh-n">{i + 1}</div>
           <div>
@@ -135,8 +134,8 @@ export default function WallpaperHelp({ onBack }) {
         </div>
       ))}
 
-      <p className="wh-note"><b>Bon à savoir :</b> une connexion internet est nécessaire pour que le fond se mette à jour. Sur un ordinateur professionnel, vérifie d'abord auprès de ton service informatique que tu peux installer ce type de logiciel.</p>
-      <p className="wh-note"><b>Sans rien installer :</b> ouvre le lien dans ton navigateur et appuie sur F11 pour l'afficher en plein écran.</p>
+      <p className="wh-note">{T(<><b>Bon à savoir :</b> une connexion internet est nécessaire pour que le fond se mette à jour. Sur un ordinateur professionnel, vérifie d'abord auprès de ton service informatique que tu peux installer ce type de logiciel.</>, <><b>Good to know:</b> an internet connection is required for the wallpaper to update. On a work computer, first check with your IT department that you are allowed to install this kind of software.</>)}</p>
+      <p className="wh-note">{T(<><b>Sans rien installer :</b> ouvre le lien dans ton navigateur et appuie sur F11 pour l'afficher en plein écran.</>, <><b>Without installing anything:</b> open the link in your browser and press F11 to show it full screen.</>)}</p>
     </div>
   );
 }

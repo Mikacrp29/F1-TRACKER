@@ -5,6 +5,7 @@ import Videos from "./Videos";
 import WallpaperHelp from "./WallpaperHelp";
 import WidgetHelp from "./WidgetHelp";
 import { supportsPaddock, isWallpaper, isWidgetPath, PaddockBoundary } from "./paddock/support";
+import { useLang, T, locale, LangSwitch } from "./i18n";
 
 // « Nos vidéos » ouvre directement ton compte TikTok (plus de liste à tenir à jour)
 const TIKTOK_URL = "https://www.tiktok.com/@formuladesk";
@@ -23,12 +24,14 @@ const RESULTS = [];
 const replace = (arr, items) => { if (items.length) { arr.length = 0; arr.push(...items); } };
 
 // ─── HELPERS ──────────────────────────────────────────────────────
-const fmtT    = i => new Date(i).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-const fmtH    = i => { const d=new Date(i); return String(d.getHours()).padStart(2,"0")+"h"+String(d.getMinutes()).padStart(2,"0"); };
-const fmtD    = i => new Date(i).toLocaleDateString([],{weekday:"short",day:"numeric",month:"short"});
-const fmtFull = i => new Date(i).toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});
-const S_LBL   = {fp1:"EL 1",fp2:"EL 2",fp3:"EL 3",sprintQ:"Sprint Shoot-Out",sprint:"Sprint",quali:"Qualifications",race:"Course"};
-const S_SHT   = {fp1:"EL1",fp2:"EL2",fp3:"EL3",sprintQ:"SQ",sprint:"SPRINT",quali:"QUALI",race:"COURSE"};
+const fmtT    = i => new Date(i).toLocaleTimeString(locale(),{hour:"2-digit",minute:"2-digit"});
+const fmtH    = i => { const d=new Date(i); const h=String(d.getHours()).padStart(2,"0"),m=String(d.getMinutes()).padStart(2,"0"); return T(h+"h"+m,h+":"+m); };
+const fmtD    = i => new Date(i).toLocaleDateString(locale(),{weekday:"short",day:"numeric",month:"short"});
+const fmtFull = i => new Date(i).toLocaleDateString(locale(),{day:"numeric",month:"short",year:"numeric"});
+const S_LBL   = {get fp1(){return T("EL 1","Practice 1")},get fp2(){return T("EL 2","Practice 2")},get fp3(){return T("EL 3","Practice 3")},get sprintQ(){return T("Sprint Shoot-Out","Sprint Qualifying")},get sprint(){return "Sprint"},get quali(){return T("Qualifications","Qualifying")},get race(){return T("Course","Race")}};
+// date longue d'un résultat (recalculée depuis le calendrier pour suivre la langue)
+const rDate = r => { const g=CAL.find(x=>x.round===r.round); return g?new Date(g.sessions.race).toLocaleDateString(locale(),{day:"numeric",month:"long",year:"numeric"}):r.date; };
+const S_SHT   = {get fp1(){return T("EL1","FP1")},get fp2(){return T("EL2","FP2")},get fp3(){return T("EL3","FP3")},get sprintQ(){return "SQ"},get sprint(){return "SPRINT"},get quali(){return "QUALI"},get race(){return T("COURSE","RACE")}};
 const sessOrd = gp => (gp.hasSprint?["fp1","sprintQ","sprint","quali","race"]:["fp1","fp2","fp3","quali","race"]).filter(k=>gp.sessions[k]);
 const gpSt    = gp => { const now=Date.now(),vs=Object.values(gp.sessions).map(s=>new Date(s).getTime()); if(now>new Date(gp.sessions.race).getTime()+7200000)return"finished"; if(now>Math.min(...vs))return"ongoing"; return"upcoming"; };
 const nxtGP   = () => CAL.find(g=>new Date(g.sessions.race).getTime()+7200000>Date.now())||CAL[CAL.length-1];
@@ -213,7 +216,7 @@ function Cd({target,label}){
   const{d,h,m,s}=useCd(target);
   return(<div>
     <div style={{fontSize:".66rem",color:"var(--g)",marginBottom:4,fontWeight:600}}>⏱ {label}</div>
-    <div className="cdown">{[{v:d,l:"Jours"},{v:h,l:"Hrs"},{v:m,l:"Min"},{v:s,l:"Sec"}].map(({v,l})=>(
+    <div className="cdown">{[{v:d,l:T("Jours","Days")},{v:h,l:T("Hrs","Hrs")},{v:m,l:"Min"},{v:s,l:"Sec"}].map(({v,l})=>(
       <div key={l} className="cu"><div className="cn">{String(v).padStart(2,"0")}</div><div className="cl">{l}</div></div>
     ))}</div>
   </div>);
@@ -228,7 +231,7 @@ function SRow({k,time,isNext}){
 }
 function SBadge({st}){
   return(<span className={`sbg ${st==="ongoing"?"son":st==="finished"?"sfi":"sup"}`}>
-    {st==="ongoing"&&<><span/>En cours</>}{st==="finished"&&"Terminé"}{st==="upcoming"&&"À venir"}
+    {st==="ongoing"&&<><span/>{T("En cours","Live")}</>}{st==="finished"&&T("Terminé","Finished")}{st==="upcoming"&&T("À venir","Upcoming")}
   </span>);
 }
 
@@ -243,7 +246,7 @@ function Home({fav,setFav,onVideos,onWall,onWidget}){
     <div className="hero">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
         <div style={{flex:1}}>
-          <div className="hlbl">{st==="ongoing"?"EN COURS":"Prochain Grand Prix"}</div>
+          <div className="hlbl">{st==="ongoing"?T("EN COURS","IN PROGRESS"):T("Prochain Grand Prix","Next Grand Prix")}</div>
           <h1 className="htitle">{gp.name}</h1>
           <div className="hsub">{gp.circuit} · {gp.city}</div>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -253,44 +256,44 @@ function Home({fav,setFav,onVideos,onWall,onWidget}){
         </div>
         <span style={{fontSize:"2rem",marginLeft:7}}><Flag f={gp.flag}/></span>
       </div>
-      <div style={{marginTop:12}}><Cd target={gp.sessions.race} label={`Départ de la course — ${fmtD(gp.sessions.race)} ${fmtT(gp.sessions.race)}`}/></div>
+      <div style={{marginTop:12}}><Cd target={gp.sessions.race} label={`${T("Départ de la course","Race start")} — ${fmtD(gp.sessions.race)} ${fmtT(gp.sessions.race)}`}/></div>
     </div>
     <div style={{marginBottom:14}}>
-      <div className="ptitle">Sessions du weekend</div>
+      <div className="ptitle">{T("Sessions du weekend","Weekend sessions")}</div>
       <div className="card" style={{padding:"5px 3px"}}>
         {ord.map(k=><SRow key={k} k={k} time={gp.sessions[k]} isNext={ns?.k===k}/>)}
       </div>
       {onVideos&&(
       <button onClick={onVideos} style={LNK}>
-        <span>🎬 NOS VIDÉOS</span><span style={{color:"var(--red)"}}>›</span>
+        <span>🎬 {T("NOS VIDÉOS","OUR VIDEOS")}</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
       {onWall&&(
       <button onClick={onWall} style={LNK}>
-        <span>🖥️ FOND D'ÉCRAN LIVE</span><span style={{color:"var(--red)"}}>›</span>
+        <span>🖥️ {T("FOND D'ÉCRAN LIVE","LIVE WALLPAPER")}</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
       {onWidget&&(
       <button onClick={onWidget} style={LNK}>
-        <span>📱 WIDGET IPHONE</span><span style={{color:"var(--red)"}}>›</span>
+        <span>📱 {T("WIDGET IPHONE","IPHONE WIDGET")}</span><span style={{color:"var(--red)"}}>›</span>
       </button>
       )}
-      <a href="/legal.html" target="_blank" rel="noopener" style={{display:"block",textAlign:"center",marginTop:12,fontSize:".68rem",color:"#8a8a95",textDecoration:"underline"}}>Mentions légales &amp; confidentialité</a>
+      <a href="/legal.html" target="_blank" rel="noopener" style={{display:"block",textAlign:"center",marginTop:12,fontSize:".68rem",color:"#8a8a95",textDecoration:"underline"}}>{T("Mentions légales & confidentialité","Legal notice & privacy")}</a>
     </div>
     <div style={{marginBottom:14}}>
-      <div className="ptitle">Saison {new Date().getFullYear()}</div>
+      <div className="ptitle">{T("Saison","Season")} {new Date().getFullYear()}</div>
       <div className="g2">
         {[
           {l:"Leader",v:lead?`${lead.short} — ${lead.pts} pts`:"—"},
-          {l:"Avance",v:lead&&second?`+${lead.pts-second.pts} pts sur ${second.short}`:"—"},
-          {l:"GP disputés",v:`${done} / ${CAL.length}`},
-          {l:"Prochaine course",v:`${gp.name.replace(" GP","")} · ${fmtFull(gp.sessions.race)}`},
+          {l:T("Avance","Lead"),v:lead&&second?`+${lead.pts-second.pts} ${T("pts sur","pts over")} ${second.short}`:"—"},
+          {l:T("GP disputés","GPs completed"),v:`${done} / ${CAL.length}`},
+          {l:T("Prochaine course","Next race"),v:`${gp.name.replace(" GP","")} · ${fmtFull(gp.sessions.race)}`},
         ].map(({l,v})=>(<div key={l} className="sc"><div className="sl2">{l}</div><div className="sv" style={{fontSize:".78rem"}}>{v}</div></div>))}
       </div>
     </div>
     {DRIVERS.length>0&&(
     <div style={{marginBottom:14}}>
-      <div className="ptitle">Mon Pilote ⭐</div>
+      <div className="ptitle">{T("Mon Pilote","My Driver")} ⭐</div>
       <div className="card">
         {DRIVERS.slice(0,8).map(d=>{
           const isFav=fav===d.short;
@@ -303,7 +306,7 @@ function Home({fav,setFav,onVideos,onWall,onWidget}){
         })}
       </div>
     </div>)}
-    <div className="note">Données Jolpica-F1 · mise à jour automatique · Heures en fuseau local</div>
+    <div className="note">{T("Données Jolpica-F1 · mise à jour automatique · Heures en fuseau local","Jolpica-F1 data · automatic updates · Times in your local time zone")}</div>
   </div>);
 }
 
@@ -334,13 +337,13 @@ function Calendar({onGP}){
   };
 
   return(<div className="fade">
-    <div className="ptitle">Calendrier F1 {new Date().getFullYear()} — {CAL.length} GP</div>
+    <div className="ptitle">{T("Calendrier F1","F1 Calendar")} {new Date().getFullYear()} — {CAL.length} GP</div>
     {sprints.length>0&&(
-      <div className="ibox">🏃 {sprints.length} weekends Sprint : {sprints.map(g=>g.name.replace(" GP","")).join(", ")}</div>
+      <div className="ibox">🏃 {sprints.length} {T("weekends Sprint","Sprint weekends")} : {sprints.map(g=>g.name.replace(" GP","")).join(", ")}</div>
     )}
-    {todo.length>0&&<div className="ptitle" style={{fontSize:".76rem"}}>À venir · {todo.length}</div>}
+    {todo.length>0&&<div className="ptitle" style={{fontSize:".76rem"}}>{T("À venir","Upcoming")} · {todo.length}</div>}
     {todo.map(card)}
-    {done.length>0&&<div className="ptitle" style={{fontSize:".76rem",marginTop:16}}>Terminés · {done.length}</div>}
+    {done.length>0&&<div className="ptitle" style={{fontSize:".76rem",marginTop:16}}>{T("Terminés","Finished")} · {done.length}</div>}
     {done.map(card)}
   </div>);
 }
@@ -353,12 +356,12 @@ function Standings(){
   const lead=DRIVERS[0], second=DRIVERS[1];
   const cLead=CONSTRUCTORS[0], cSecond=CONSTRUCTORS[1];
   return(<div className="fade">
-    <div className="ptitle">Classements {new Date().getFullYear()} {lastRound>0&&<span className="b26" style={{marginLeft:4}}>APRÈS R{lastRound}</span>}</div>
+    <div className="ptitle">{T("Classements","Standings")} {new Date().getFullYear()} {lastRound>0&&<span className="b26" style={{marginLeft:4}}>{T("APRÈS","AFTER")} R{lastRound}</span>}</div>
     <div className="tabs">
-      <button className={`tab${tab==="d"?" on":""}`} onClick={()=>setTab("d")}>Pilotes</button>
-      <button className={`tab${tab==="c"?" on":""}`} onClick={()=>setTab("c")}>Constructeurs</button>
+      <button className={`tab${tab==="d"?" on":""}`} onClick={()=>setTab("d")}>{T("Pilotes","Drivers")}</button>
+      <button className={`tab${tab==="c"?" on":""}`} onClick={()=>setTab("c")}>{T("Constructeurs","Constructors")}</button>
     </div>
-    {DRIVERS.length===0&&<div className="empty"><div className="eico">⏳</div><p>Pas encore de classement</p></div>}
+    {DRIVERS.length===0&&<div className="empty"><div className="eico">⏳</div><p>{T("Pas encore de classement","No standings yet")}</p></div>}
     {DRIVERS.length>0&&(tab==="d"?(
       <div className="card">
         {DRIVERS.map(d=>(<div key={d.short} className="strow">
@@ -366,7 +369,7 @@ function Standings(){
           <div className="tb" style={{background:d.color}}/>
           <div className="di" style={{flex:1}}>
             <div className="dn"><Flag f={d.flag}/> {d.name}</div>
-            <div className="dt">{d.team} · {d.wins} victoire{d.wins!==1?"s":""}</div>
+            <div className="dt">{d.team} · {d.wins} {T("victoire","win")}{d.wins!==1?"s":""}</div>
             <div className="pbar"><div className="pfill" style={{width:`${(d.pts/maxD)*100}%`,background:d.color}}/></div>
           </div>
           <div style={{textAlign:"right",marginLeft:8}}><div className="dp">{d.pts}</div><span className="dl">PTS</span></div>
@@ -379,7 +382,7 @@ function Standings(){
           <div className="tb" style={{background:c.color}}/>
           <div className="di" style={{flex:1}}>
           <div className="dn"><TeamLogo id={c.id} name={c.name} color={c.color}/> {c.name}</div>
-            <div className="dt">{c.wins} victoire{c.wins!==1?"s":""}</div>
+            <div className="dt">{c.wins} {T("victoire","win")}{c.wins!==1?"s":""}</div>
             <div className="pbar"><div className="pfill" style={{width:`${(c.pts/maxC)*100}%`,background:c.color}}/></div>
           </div>
           <div style={{textAlign:"right",marginLeft:8}}><div className="dp">{c.pts}</div><span className="dl">PTS</span></div>
@@ -387,7 +390,7 @@ function Standings(){
       </div>
     ))}
     {lead&&second&&cLead&&cSecond&&(
-      <div className="note">{lead.short} mène {second.short} de {lead.pts-second.pts} pts · {cLead.name} devant {cSecond.name} de {cLead.pts-cSecond.pts} pts</div>
+      <div className="note">{T(`${lead.short} mène ${second.short} de ${lead.pts-second.pts} pts · ${cLead.name} devant ${cSecond.name} de ${cLead.pts-cSecond.pts} pts`,`${lead.short} leads ${second.short} by ${lead.pts-second.pts} pts · ${cLead.name} ahead of ${cSecond.name} by ${cLead.pts-cSecond.pts} pts`)}</div>
     )}
   </div>);
 }
@@ -400,13 +403,13 @@ function Results(){
   const lastRound=RESULTS.length?Math.max(...RESULTS.map(r=>r.round)):0;
 
   return(<div className="fade">
-    <div className="ptitle">Résultats {new Date().getFullYear()} {lastRound>0&&<span className="b26" style={{marginLeft:4}}>R1 → R{lastRound}</span>}</div>
+    <div className="ptitle">{T("Résultats","Results")} {new Date().getFullYear()} {lastRound>0&&<span className="b26" style={{marginLeft:4}}>R1 → R{lastRound}</span>}</div>
     <div className="tabs">
-      <button className={`tab${filter==="all"?" on":""}`} onClick={()=>setFilter("all")}>Tout</button>
-      <button className={`tab${filter==="race"?" on":""}`} onClick={()=>setFilter("race")}>Courses</button>
+      <button className={`tab${filter==="all"?" on":""}`} onClick={()=>setFilter("all")}>{T("Tout","All")}</button>
+      <button className={`tab${filter==="race"?" on":""}`} onClick={()=>setFilter("race")}>{T("Courses","Races")}</button>
       <button className={`tab${filter==="sprint"?" on":""}`} onClick={()=>setFilter("sprint")}>Sprints</button>
     </div>
-    {filtered.length===0&&<div className="empty"><div className="eico">⏳</div><p>Aucun résultat pour le moment</p></div>}
+    {filtered.length===0&&<div className="empty"><div className="eico">⏳</div><p>{T("Aucun résultat pour le moment","No results yet")}</p></div>}
     {filtered.map(r=>{
       const key=`${r.round}-${r.type}`;
       const isOpen=open===key;
@@ -417,14 +420,14 @@ function Results(){
             <div>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
                 <div style={{fontFamily:"Orbitron",fontSize:".52rem",color:"var(--red)",fontWeight:700,letterSpacing:".13em"}}>R{r.round}</div>
-                {isSprint?<span className="bspr">SPRINT</span>:<span className="b26">COURSE</span>}
+                {isSprint?<span className="bspr">SPRINT</span>:<span className="b26">{T("COURSE","RACE")}</span>}
               </div>
               <div style={{fontWeight:700,fontSize:".92rem"}}><Flag f={r.flag}/> {r.name}</div>
-              <div style={{fontSize:".7rem",color:"var(--g)"}}>{r.date}</div>
+              <div style={{fontSize:".7rem",color:"var(--g)"}}>{rDate(r)}</div>
             </div>
             <div style={{textAlign:"right"}}>
               {r.top[0]&&<div style={{fontSize:".82rem",fontWeight:700}}>🥇 {r.top[0].drv} <span style={{color:"var(--g)",fontWeight:400}}>· {r.top[0].team}</span></div>}
-              <div style={{fontSize:".58rem",color:"var(--g)",marginTop:3}}>{isOpen?"▲ Fermer":"▼ Résultats"}</div>
+              <div style={{fontSize:".58rem",color:"var(--g)",marginTop:3}}>{isOpen?T("▲ Fermer","▲ Close"):T("▼ Résultats","▼ Results")}</div>
             </div>
           </div>
         </div>
@@ -433,13 +436,13 @@ function Results(){
             <span className={`rpos${p.pos<=3?` p${p.pos}`:""}`}>{p.pos<=3?["🥇","🥈","🥉"][p.pos-1]:p.pos}</span>
             <div style={{width:3,height:24,borderRadius:2,background:p.color,flexShrink:0}}/>
             <div style={{flex:1}}><div className="rdv"><Flag f={p.flag}/> {p.drv} · {p.name.split(" ").pop()}</div><div className="rtm">{p.team}</div></div>
-            <span className="rgp">{p.gap}</span>
+            <span className="rgp">{p.gap==="Vainqueur"?T("Vainqueur","Winner"):p.gap}</span>
             <span className="rpt">{p.pts>0?`+${p.pts}`:"—"}</span>
           </div>))}
           {!isSprint&&(
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,padding:"9px 12px"}}>
               <div style={{background:"var(--bg4)",borderRadius:7,padding:"8px 10px"}}><div style={{fontSize:".6rem",color:"var(--g)",marginBottom:2}}>🏆 Pole</div><div style={{fontWeight:700,fontSize:".82rem"}}>{r.pole}</div></div>
-              <div style={{background:"var(--bg4)",borderRadius:7,padding:"8px 10px"}}><div style={{fontSize:".6rem",color:"var(--g)",marginBottom:2}}>⚡ Meilleur Tour</div><div style={{fontWeight:700,fontSize:".82rem"}}>{r.fast}</div></div>
+              <div style={{background:"var(--bg4)",borderRadius:7,padding:"8px 10px"}}><div style={{fontSize:".6rem",color:"var(--g)",marginBottom:2}}>⚡ {T("Meilleur Tour","Fastest Lap")}</div><div style={{fontWeight:700,fontSize:".82rem"}}>{r.fast}</div></div>
             </div>
           )}
           {r.dnf&&r.dnf.length>0&&(
@@ -450,7 +453,7 @@ function Results(){
         </>)}
       </div>);
     })}
-    <div className="note">Courses et Sprints séparés · Filtrer par type ci-dessus</div>
+    <div className="note">{T("Courses et Sprints séparés · Filtrer par type ci-dessus","Races and Sprints listed separately · Filter by type above")}</div>
   </div>);
 }
 
@@ -459,15 +462,15 @@ function Alerts(){
   const [h1,setH1]=useState(true);const [m15,setM15]=useState(true);const [push,setPush]=useState(false);
   const gp=nxtGP(),ns=nxtSess(gp);
   const activate=async()=>{
-    if(!("Notification" in window)){alert("Non supporté.");return;}
+    if(!("Notification" in window)){alert(T("Non supporté.","Not supported."));return;}
     const p=await Notification.requestPermission();
-    if(p==="granted"){setPush(true);new Notification("Formula DESK 🏁",{body:`Alertes activées ! Prochain GP : ${gp.name}, ${fmtFull(gp.sessions.race)}.`});}
-    else alert("Permission refusée — activez les notifications dans les réglages du navigateur.");
+    if(p==="granted"){setPush(true);new Notification("Formula DESK 🏁",{body:T(`Alertes activées ! Prochain GP : ${gp.name}, ${fmtFull(gp.sessions.race)}.`,`Alerts enabled! Next GP: ${gp.name}, ${fmtFull(gp.sessions.race)}.`)});}
+    else alert(T("Permission refusée — activez les notifications dans les réglages du navigateur.","Permission denied — enable notifications in your browser settings."));
   };
   return(<div className="fade">
-    <div className="ptitle">Alertes & Notifications</div>
+    <div className="ptitle">{T("Alertes & Notifications","Alerts & Notifications")}</div>
     {ns&&(<div style={{marginBottom:14}}>
-      <div className="ptitle" style={{fontSize:".76rem"}}>Prochaine alerte</div>
+      <div className="ptitle" style={{fontSize:".76rem"}}>{T("Prochaine alerte","Next alert")}</div>
       <div className="card" style={{padding:"12px 14px"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <span style={{fontSize:"1.4rem"}}><Flag f={gp.flag}/></span>
@@ -480,9 +483,9 @@ function Alerts(){
       </div>
     </div>)}
     <div style={{marginBottom:13}}>
-      <div style={{fontFamily:"Orbitron",fontSize:".56rem",color:"var(--red)",fontWeight:700,letterSpacing:".15em",marginBottom:7}}>RAPPELS SESSION</div>
+      <div style={{fontFamily:"Orbitron",fontSize:".56rem",color:"var(--red)",fontWeight:700,letterSpacing:".15em",marginBottom:7}}>{T("RAPPELS SESSION","SESSION REMINDERS")}</div>
       <div className="card">
-        {[{l:"1 heure avant",s:"Alerte 60 min avant chaque session",v:h1,set:setH1},{l:"15 minutes avant",s:"Rappel rapide avant le départ",v:m15,set:setM15}].map(x=>(
+        {[{l:T("1 heure avant","1 hour before"),s:T("Alerte 60 min avant chaque session","Alert 60 min before each session"),v:h1,set:setH1},{l:T("15 minutes avant","15 minutes before"),s:T("Rappel rapide avant le départ","Quick reminder before the start"),v:m15,set:setM15}].map(x=>(
           <div key={x.l} className="trow">
             <div><div className="tl">{x.l}</div><div className="ts">{x.s}</div></div>
             <label className="tg"><input type="checkbox" checked={x.v} onChange={e=>x.set(e.target.checked)}/><span className="tsl"/></label>
@@ -491,14 +494,14 @@ function Alerts(){
       </div>
     </div>
     <div style={{marginBottom:13}}>
-      <div style={{fontFamily:"Orbitron",fontSize:".56rem",color:"var(--red)",fontWeight:700,letterSpacing:".15em",marginBottom:7}}>PUSH PWA</div>
+      <div style={{fontFamily:"Orbitron",fontSize:".56rem",color:"var(--red)",fontWeight:700,letterSpacing:".15em",marginBottom:7}}>{T("PUSH PWA","PWA PUSH")}</div>
       <div className="card"><div className="trow">
-        <div><div className="tl">Notifications Push</div><div className="ts">{push?"✅ Activées":"Activer les alertes système"}</div></div>
-        <button onClick={activate} style={{background:push?"var(--gr)":"var(--red)",border:"none",borderRadius:7,color:"#fff",fontFamily:"Rajdhani",fontWeight:700,padding:"6px 13px",cursor:"pointer",fontSize:".78rem",flexShrink:0}}>{push?"Actif ✓":"Activer"}</button>
+        <div><div className="tl">{T("Notifications Push","Push notifications")}</div><div className="ts">{push?T("✅ Activées","✅ Enabled"):T("Activer les alertes système","Enable system alerts")}</div></div>
+        <button onClick={activate} style={{background:push?"var(--gr)":"var(--red)",border:"none",borderRadius:7,color:"#fff",fontFamily:"Rajdhani",fontWeight:700,padding:"6px 13px",cursor:"pointer",fontSize:".78rem",flexShrink:0}}>{push?T("Actif ✓","On ✓"):T("Activer","Enable")}</button>
       </div></div>
     </div>
     <div style={{marginBottom:13}}>
-      <div style={{fontFamily:"Orbitron",fontSize:".56rem",color:"var(--red)",fontWeight:700,letterSpacing:".15em",marginBottom:7}}>PROCHAINES SESSIONS</div>
+      <div style={{fontFamily:"Orbitron",fontSize:".56rem",color:"var(--red)",fontWeight:700,letterSpacing:".15em",marginBottom:7}}>{T("PROCHAINES SESSIONS","UPCOMING SESSIONS")}</div>
       <div className="card" style={{padding:"5px 3px"}}>
         {CAL.filter(g=>gpSt(g)!=="finished").slice(0,4).map(g=>{
           const n=nxtSess(g); if(!n) return null;
@@ -511,7 +514,7 @@ function Alerts(){
       </div>
     </div>
     <div className="card" style={{padding:12,background:"rgba(232,0,45,.04)",borderColor:"rgba(232,0,45,.14)"}}>
-      <div style={{fontSize:".76rem",color:"var(--g)",lineHeight:1.55}}>ℹ️ Heures converties dans votre fuseau horaire local. Les rappels programmés viendront dans une prochaine version.</div>
+      <div style={{fontSize:".76rem",color:"var(--g)",lineHeight:1.55}}>{T("ℹ️ Heures converties dans votre fuseau horaire local. Les rappels programmés viendront dans une prochaine version.","ℹ️ Times are converted to your local time zone. Scheduled reminders are coming in a future version.")}</div>
     </div>
   </div>);
 }
@@ -523,7 +526,7 @@ function Detail({gp,onBack}){
   const gpResults=RESULTS.filter(r=>r.round===gp.round);
   const hasRes=gpResults.length>0;
   return(<div className="slide">
-    <button className="back" onClick={onBack}><Ic n="back" s={15}/> Calendrier</button>
+    <button className="back" onClick={onBack}><Ic n="back" s={15}/> {T("Calendrier","Calendar")}</button>
     <div style={{background:"linear-gradient(135deg,#120408,#0d0d12)",border:"1px solid rgba(232,0,45,.22)",borderRadius:15,padding:17,marginBottom:11,position:"relative",overflow:"hidden"}}>
       <div style={{position:"absolute",top:-40,right:-20,width:140,height:140,borderRadius:"50%",background:"radial-gradient(circle,rgba(232,0,45,.1) 0%,transparent 70%)"}}/>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
@@ -540,11 +543,11 @@ function Detail({gp,onBack}){
         {gp.hasSprint&&<span className="chip chip-sp">🏃 Sprint</span>}
         <span className="chip">🏎 {fmtFull(gp.sessions.race)}</span>
       </div>
-      {st!=="finished"&&<div style={{marginTop:12}}><Cd target={gp.sessions.race} label={`Départ de la course — ${fmtD(gp.sessions.race)} ${fmtT(gp.sessions.race)}`}/></div>}
+      {st!=="finished"&&<div style={{marginTop:12}}><Cd target={gp.sessions.race} label={`${T("Départ de la course","Race start")} — ${fmtD(gp.sessions.race)} ${fmtT(gp.sessions.race)}`}/></div>}
     </div>
     <div className="tabs">
-      <button className={`tab${tab==="sessions"?" on":""}`} onClick={()=>setTab("sessions")}>Sessions</button>
-      {hasRes&&<button className={`tab${tab==="results"?" on":""}`} onClick={()=>setTab("results")}>Résultats</button>}
+      <button className={`tab${tab==="sessions"?" on":""}`} onClick={()=>setTab("sessions")}>{T("Sessions","Sessions")}</button>
+      {hasRes&&<button className={`tab${tab==="results"?" on":""}`} onClick={()=>setTab("results")}>{T("Résultats","Results")}</button>}
     </div>
     {tab==="sessions"||!hasRes?(
       <div className="card" style={{padding:"5px 3px"}}>{ord.map(k=><SRow key={k} k={k} time={gp.sessions[k]} isNext={ns?.k===k}/>)}</div>
@@ -553,22 +556,22 @@ function Detail({gp,onBack}){
         {gpResults.map(r=>(
           <div key={`${r.round}-${r.type}`} style={{marginBottom:12}}>
             <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:7}}>
-              {r.type==="sprint"?<span className="bspr">SPRINT</span>:<span className="b26">COURSE</span>}
-              <span style={{fontSize:".72rem",color:"var(--g)"}}>{r.date}</span>
+              {r.type==="sprint"?<span className="bspr">SPRINT</span>:<span className="b26">{T("COURSE","RACE")}</span>}
+              <span style={{fontSize:".72rem",color:"var(--g)"}}>{rDate(r)}</span>
             </div>
             <div className="card">
               {r.top.map(p=>(<div key={p.pos} className="rrow">
                 <span className={`rpos${p.pos<=3?` p${p.pos}`:""}`}>{p.pos<=3?["🥇","🥈","🥉"][p.pos-1]:p.pos}</span>
                 <div style={{width:3,height:24,borderRadius:2,background:p.color,flexShrink:0}}/>
                 <div style={{flex:1}}><div className="rdv"><Flag f={p.flag}/> {p.drv} · {p.name.split(" ").pop()}</div><div className="rtm">{p.team}</div></div>
-                <span className="rgp">{p.gap}</span>
+                <span className="rgp">{p.gap==="Vainqueur"?T("Vainqueur","Winner"):p.gap}</span>
                 <span className="rpt">{p.pts>0?`+${p.pts}`:"—"}</span>
               </div>))}
             </div>
             {r.type==="race"&&(
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
                 <div className="sc"><div className="sl2">🏆 Pole</div><div style={{fontWeight:700,fontSize:".82rem"}}>{r.pole}</div></div>
-                <div className="sc"><div className="sl2">⚡ Meilleur Tour</div><div style={{fontWeight:700,fontSize:".82rem"}}>{r.fast}</div></div>
+                <div className="sc"><div className="sl2">⚡ {T("Meilleur Tour","Fastest Lap")}</div><div style={{fontWeight:700,fontSize:".82rem"}}>{r.fast}</div></div>
               </div>
             )}
           </div>
@@ -584,12 +587,12 @@ function PitSky(){
   const{d,h,m,s}=useCd(gp.sessions.race);
   return(<div className="pit-sky">
     <div>
-      <div className="pit-kicker"><i/>{st==="ongoing"?"EN COURS":"PROCHAIN GRAND PRIX"}</div>
+      <div className="pit-kicker"><i/>{st==="ongoing"?T("EN COURS","IN PROGRESS"):T("PROCHAIN GRAND PRIX","NEXT GRAND PRIX")}</div>
       <div className="pit-title"><Flag f={gp.flag}/> {gp.name}</div>
       <div className="pit-sub">{gp.circuit} · {gp.city} · {fmtFull(gp.sessions.race)}{gp.hasSprint&&<span className="pit-tag">SPRINT</span>}</div>
     </div>
     <div className="pit-cd">
-      {[[d,"JOURS"],[h,"HEURES"],[m,"MIN"],[s,"SEC"]].map(([v,l])=>(<span key={l}><b>{String(v).padStart(2,"0")}</b><em>{l}</em></span>))}
+      {[[d,T("JOURS","DAYS")],[h,T("HEURES","HOURS")],[m,"MIN"],[s,"SEC"]].map(([v,l])=>(<span key={l}><b>{String(v).padStart(2,"0")}</b><em>{l}</em></span>))}
     </div>
   </div>);
 }
@@ -598,7 +601,7 @@ function PitRoad({ready,onVideos,onWall,onWidget}){
   const stop=e=>e.stopPropagation();
   return(<>
   {gp&&(<div className="pit-road">
-    <div className="pit-road-title">SESSIONS DU WEEK-END</div>
+    <div className="pit-road-title">{T("SESSIONS DU WEEK-END","WEEKEND SESSIONS")}</div>
     {ord.map(k=>{
       const t=gp.sessions[k];
       const past=new Date(t).getTime()+3600000<Date.now();
@@ -612,15 +615,16 @@ function PitRoad({ready,onVideos,onWall,onWidget}){
   </div>)}
   {/* les trois liens, l'un sous l'autre, exactement au même format */}
   {(onVideos||onWall||onWidget)&&(<div className="pit-links">
-    {onVideos&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onVideos}><span>🎬 NOS VIDÉOS</span><b>›</b></button>)}
-    {onWall&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWall}><span>🖥️ FOND D'ÉCRAN LIVE</span><b>›</b></button>)}
-    {onWidget&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWidget}><span>📱 WIDGET IPHONE</span><b>›</b></button>)}
-    <a href="/legal.html" target="_blank" rel="noopener" onPointerDown={stop} style={{textAlign:"center",fontSize:".66rem",color:"rgba(255,255,255,.6)",textDecoration:"underline",textShadow:"0 1px 4px rgba(0,0,0,.9)"}}>Mentions légales &amp; confidentialité</a>
+    {onVideos&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onVideos}><span>🎬 {T("NOS VIDÉOS","OUR VIDEOS")}</span><b>›</b></button>)}
+    {onWall&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWall}><span>🖥️ {T("FOND D'ÉCRAN LIVE","LIVE WALLPAPER")}</span><b>›</b></button>)}
+    {onWidget&&(<button type="button" className="pit-lnk" onPointerDown={stop} onClick={onWidget}><span>📱 {T("WIDGET IPHONE","IPHONE WIDGET")}</span><b>›</b></button>)}
+    <a href="/legal.html" target="_blank" rel="noopener" onPointerDown={stop} style={{textAlign:"center",fontSize:".66rem",color:"rgba(255,255,255,.6)",textDecoration:"underline",textShadow:"0 1px 4px rgba(0,0,0,.9)"}}>{T("Mentions légales & confidentialité","Legal notice & privacy")}</a>
   </div>)}
   </>);
 }
 
 // ═══ APP ROOT ══════════════════════════════════════════════════════
+const NAV_EN={home:"Home",calendar:"Calendar",standings:"Standings",results:"Results",alerts:"Alerts"};
 const NAV=[
   {id:"home",     ico:"home",   lbl:"Accueil"},
   {id:"calendar", ico:"cal",    lbl:"Calendrier"},
@@ -630,6 +634,7 @@ const NAV=[
 ];
 
 export default function App(){
+  useLang(); // se redessine quand on change de langue (FR | EN)
   const [page,setPage]=useState("home");
   const [selGP,setSelGP]=useState(null);
   const [fav,setFav]=useState(null);
@@ -684,12 +689,12 @@ const finishIntro=()=>{
   const openGP=g=>{setSelGP(g);setPage("detail");};
   const ready=CAL.length>0;
   const alertActive=ready&&gpSt(nxtGP())==="ongoing";
-  const statusLabel=status==="loading"?"CHARGEMENT…":status==="error"?"HORS LIGNE":`LIVE · ${new Date().getFullYear()}`;
+  const statusLabel=status==="loading"?T("CHARGEMENT…","LOADING…"):status==="error"?T("HORS LIGNE","OFFLINE"):`LIVE · ${new Date().getFullYear()}`;
 
    // le contenu de la page courante, partagé par l'interface classique ET les garages 3D
   const content=(<>
-    {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>Chargement des données F1…</p></div>}
-    {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>Impossible de charger les données.<br/>Réessaie dans un instant.</p></div>}
+    {!ready&&status==="loading"&&<div className="empty"><div className="eico">🏁</div><p>{T("Chargement des données F1…","Loading F1 data…")}</p></div>}
+    {!ready&&status==="error"&&<div className="empty"><div className="eico">⚠️</div><p>{T(<>Impossible de charger les données.<br/>Réessaie dans un instant.</>,<>Unable to load the data.<br/>Please try again in a moment.</>)}</p></div>}
     {ready&&page==="home"     &&<Home fav={fav} setFav={setFav} onVideos={paddockOn?undefined:openTikTok} onWall={paddockOn?undefined:()=>setWallHelpOpen(true)} onWidget={paddockOn?undefined:()=>setWidgetHelpOpen(true)}/>}
     {ready&&page==="calendar" &&<Calendar onGP={openGP}/>}
     {ready&&page==="standings"&&<Standings/>}
@@ -714,7 +719,7 @@ const finishIntro=()=>{
       <div className="app">
         <header className="hdr">
           <div className="logo"><div className="dot"/><span className="logo-r">FORMULA</span><span>DESK</span></div>
-          <span className="b26">{statusLabel}</span>
+          <span style={{display:"inline-flex",alignItems:"center",gap:8}}><LangSwitch/><span className="b26">{statusLabel}</span></span>
         </header>
         <div className="scroll">
           <div className="inner">{content}</div>
@@ -722,7 +727,7 @@ const finishIntro=()=>{
         <nav className="bnav">
           {NAV.map(({id,ico,lbl})=>(
             <button key={id} className={`nb${(page===id||(page==="detail"&&id==="calendar"))?" on":""}`} onClick={()=>go(id)}>
-              <Ic n={ico} s={20}/>{lbl}
+              <Ic n={ico} s={20}/>{T(lbl,NAV_EN[id])}
             </button>
           ))}
         </nav>

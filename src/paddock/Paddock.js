@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GARAGES, PANO, PW, PH, GW, GH } from "./config";
+import { T, LangSwitch } from "../i18n";
 import "./paddock.css";
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -380,13 +381,13 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
                 key={x.id}
                 type="button"
                 className={`pdk-hot pdk-hot-${x.id}${x.id === "alerts" && alertActive ? " alarm" : ""}`}                style={{ left: x.hot.x, top: x.hot.y, width: x.hot.w, height: x.hot.h }}
-                aria-label={`Entrer dans ${x.label}`}
+                aria-label={`${T("Entrer dans","Enter")} ${T(x.label,x.en)}`}
                 tabIndex={phase === "pano" ? 0 : -1}
                 onMouseEnter={() => preload(x)}
                 onPointerDown={() => preload(x)}
                 onClick={() => { if (moved.current > 8) return; enter(x); }}
               >
-                <span className="pdk-hot-chip">ENTRER ›</span>
+                <span className="pdk-hot-chip">{T("ENTRER ›","ENTER ›")}</span>
               </button>
             ))}
 
@@ -411,7 +412,7 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
         <div className={`pdk-screen panel ${tone} pdk-g-${g.id}`} style={{ width: panelW, height: panelH, left: (vw - panelW) / 2, top: panelTop, animationDelay: D(0.55) }}>
           <div className="pdk-bar">
             <span className="pdk-led" />
-            {g.label}
+            {T(g.label,g.en)}
           </div>
           <div className="pdk-body">
             <div className="inner">{children}</div>
@@ -422,21 +423,21 @@ export default function Paddock({ children, onNavigate, introDone, alertActive, 
       {showHud && !wallpaper && (
         <>
           <div className="pdk-hud">
-            <button type="button" className={`pdk-brand${inGarage ? " back" : ""}`} onPointerDown={stop} onClick={inGarage ? leave : undefined} aria-label={inGarage ? "Retour au paddock" : "Formula DESK"}>
-              {inGarage ? <span className="pdk-back">‹ PADDOCK</span> : <span className="pdk-dot" />}
+            <button type="button" className={`pdk-brand${inGarage ? " back" : ""}`} onPointerDown={stop} onClick={inGarage ? leave : undefined} aria-label={inGarage ? T("Retour au paddock","Back to the paddock") : "Formula DESK"}>
+              {inGarage ? <span className="pdk-back">{T("‹ PADDOCK","‹ PADDOCK")}</span> : <span className="pdk-dot" />}
               <span>
                 FORMULA <b>DESK</b>
               </span>
             </button>
-            <span className="pdk-status">{statusLabel}</span>
+            <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}><LangSwitch /><span className="pdk-status">{statusLabel}</span></span>
           </div>
           {phase === "pano" && canPan && (
             <>
-              <button type="button" className="pdk-arrow l" onPointerDown={stop} onClick={() => step(-1)} aria-label="Garage précédent">‹</button>
-              <button type="button" className="pdk-arrow r" onPointerDown={stop} onClick={() => step(1)} aria-label="Garage suivant">›</button>
+              <button type="button" className="pdk-arrow l" onPointerDown={stop} onClick={() => step(-1)} aria-label={T("Garage précédent","Previous garage")}>‹</button>
+              <button type="button" className="pdk-arrow r" onPointerDown={stop} onClick={() => step(1)} aria-label={T("Garage suivant","Next garage")}>›</button>
             </>
           )}
-          {phase === "pano" && <div className="pdk-hint">{canPan ? "Glissez pour parcourir · touchez un garage" : "Touchez un garage"}</div>}
+          {phase === "pano" && <div className="pdk-hint">{canPan ? T("Glissez pour parcourir · touchez un garage","Drag to explore · tap a garage") : T("Touchez un garage","Tap a garage")}</div>}
         </>
       )}
     </div>
